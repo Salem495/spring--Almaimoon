@@ -6,20 +6,11 @@
 <title>Farm Follow-Up System - Almaimoon</title>
 <style>
   :root {
-    --green: #2d6a4f;
-    --green-light: #40916c;
-    --green-pale: #d8f3dc;
-    --brown: #6b4226;
-    --gold: #e9c46a;
-    --red: #d62828;
-    --blue: #1d3557;
-    --sky: #457b9d;
-    --orange: #e07b39;
-    --gray: #6c757d;
-    --bg: #f4f7f4;
-    --white: #ffffff;
-    --shadow: 0 2px 12px rgba(0,0,0,0.10);
-    --radius: 10px;
+    --green: #2d6a4f; --green-light: #40916c; --green-pale: #d8f3dc;
+    --brown: #6b4226; --gold: #e9c46a; --red: #d62828;
+    --blue: #1d3557; --sky: #457b9d; --orange: #e07b39;
+    --gray: #6c757d; --bg: #f4f7f4; --white: #ffffff;
+    --shadow: 0 2px 12px rgba(0,0,0,0.10); --radius: 10px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #222; min-height: 100vh; }
@@ -32,7 +23,7 @@
   }
   .login-card {
     background: var(--white); border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    padding: 40px 36px; width: 360px; text-align: center;
+    padding: 40px 36px; width: 380px; text-align: center;
   }
   .login-card .logo { font-size: 52px; margin-bottom: 8px; }
   .login-card h1 { color: var(--green); font-size: 22px; margin-bottom: 4px; }
@@ -56,103 +47,174 @@
   header {
     background: var(--green); color: #fff;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; height: 60px; box-shadow: var(--shadow); position: sticky; top:0; z-index:100;
+    padding: 0 20px; height: 60px; box-shadow: var(--shadow); position: sticky; top:0; z-index:100;
   }
-  header .brand { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  header .user-info { display: flex; align-items: center; gap: 14px; font-size: 14px; }
-  header .role-badge {
-    background: rgba(255,255,255,0.22); padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  }
+  header .brand { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  header .header-right { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .role-badge { background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
   header button.logout {
     background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
-    color: #fff; padding: 5px 14px; border-radius: 7px; cursor: pointer; font-size: 13px;
-    transition: background .2s;
+    color: #fff; padding: 5px 12px; border-radius: 7px; cursor: pointer; font-size: 12px;
   }
   header button.logout:hover { background: rgba(255,255,255,0.28); }
 
+  /* FARM SWITCHER BAR */
+  #farm-bar {
+    background: #1a4733; display: flex; align-items: center; gap: 0;
+    padding: 0 16px; overflow-x: auto; border-bottom: 2px solid #0d2b1e;
+  }
+  #farm-bar .farm-tab {
+    padding: 10px 20px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6);
+    cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap;
+    transition: .15s; border: none; background: none;
+  }
+  #farm-bar .farm-tab:hover { color: #fff; }
+  #farm-bar .farm-tab.active { color: #fff; border-bottom-color: var(--gold); }
+
   nav {
     background: var(--white); border-bottom: 1.5px solid #e0ead8;
-    display: flex; gap: 0; padding: 0 16px; overflow-x: auto;
+    display: flex; gap: 0; padding: 0 14px; overflow-x: auto;
   }
   nav button {
-    background: none; border: none; padding: 14px 20px; font-size: 14px; cursor: pointer;
+    background: none; border: none; padding: 12px 16px; font-size: 13px; cursor: pointer;
     color: var(--gray); border-bottom: 3px solid transparent; white-space: nowrap;
     transition: color .15s, border-color .15s; font-weight: 500;
   }
   nav button.active { color: var(--green); border-bottom-color: var(--green); font-weight: 700; }
   nav button:hover { color: var(--green-light); }
 
-  main { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  main { flex: 1; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-  /* CARDS & GRID */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 16px; margin-bottom: 24px; }
-  .stat-card {
-    background: var(--white); border-radius: var(--radius); padding: 20px 18px;
-    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px;
+  /* FARM HEADER / PHOTOS */
+  .farm-header {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    margin-bottom: 20px; overflow: hidden;
   }
-  .stat-card .icon { font-size: 28px; }
-  .stat-card .label { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; }
-  .stat-card .value { font-size: 28px; font-weight: 700; }
+  .farm-header-top {
+    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #eef3ee;
+  }
+  .farm-header-top h2 { font-size: 20px; color: var(--green); font-weight: 800; }
+  .farm-photos-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  }
+  .farm-photo-slot {
+    position: relative; height: 180px; background: #e8f0e8;
+    border-right: 2px solid #fff; cursor: pointer; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    transition: background .2s;
+  }
+  .farm-photo-slot:last-child { border-right: none; }
+  .farm-photo-slot:hover { background: #d8ead8; }
+  .farm-photo-slot img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+  .farm-photo-slot .photo-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0); display: flex;
+    align-items: center; justify-content: center; transition: background .2s;
+  }
+  .farm-photo-slot:hover .photo-overlay { background: rgba(0,0,0,0.25); }
+  .farm-photo-slot .add-photo-hint { font-size: 13px; color: var(--gray); text-align: center; padding: 10px; z-index:1; }
+  .farm-photo-slot .add-photo-hint span { font-size: 32px; display: block; margin-bottom: 6px; }
+  .farm-photo-slot .photo-actions {
+    position: absolute; bottom: 8px; right: 8px; display: none; gap: 4px; z-index: 2;
+  }
+  .farm-photo-slot:hover .photo-actions { display: flex; }
+  .farm-photo-slot .photo-actions button {
+    background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 5px;
+    padding: 4px 8px; font-size: 11px; cursor: pointer;
+  }
+  .photo-label {
+    position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.45);
+    color: #fff; font-size: 11px; padding: 4px 8px; z-index:1; display: none;
+  }
+  .farm-photo-slot img ~ .photo-label { display: block; }
+  .photo-num {
+    position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.5);
+    color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; z-index:1;
+  }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--white); border-radius: var(--radius); padding: 18px 16px; box-shadow: var(--shadow); }
+  .stat-card .icon { font-size: 26px; }
+  .stat-card .label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing:.5px; margin-top:4px; }
+  .stat-card .value { font-size: 26px; font-weight: 700; margin-top:2px; }
   .stat-card.green .value { color: var(--green); }
   .stat-card.orange .value { color: var(--orange); }
   .stat-card.blue .value { color: var(--sky); }
   .stat-card.red .value { color: var(--red); }
 
-  .card {
-    background: var(--white); border-radius: var(--radius); padding: 22px;
-    box-shadow: var(--shadow); margin-bottom: 20px;
-  }
-  .card h2 { font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card h2 { font-size: 15px; font-weight: 700; color: var(--green); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
   /* FORMS */
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
   .form-row.one { grid-template-columns: 1fr; }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-group label { font-size: 13px; font-weight: 600; color: #444; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: #444; }
   .form-group input, .form-group select, .form-group textarea {
-    padding: 9px 12px; border-radius: 7px; border: 1.5px solid #d0ddd0;
-    font-size: 14px; outline: none; transition: border .2s; font-family: inherit;
+    padding: 8px 11px; border-radius: 7px; border: 1.5px solid #d0ddd0;
+    font-size: 13px; outline: none; transition: border .2s; font-family: inherit;
   }
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--green-light); }
-  .form-group textarea { resize: vertical; min-height: 80px; }
-  .btn { padding: 9px 22px; border-radius: 7px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .form-group textarea { resize: vertical; min-height: 75px; }
+
+  /* PHOTO UPLOAD IN TASK */
+  .task-photo-upload {
+    border: 2px dashed #b8d4b8; border-radius: 8px; padding: 16px;
+    text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
+    background: #f8fdf8;
+  }
+  .task-photo-upload:hover { border-color: var(--green-light); background: #f0f9f0; }
+  .task-photo-upload input[type=file] { display: none; }
+  .task-photo-upload .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .task-photo-upload p { font-size: 12px; color: var(--gray); }
+  .task-photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .task-photo-preview .preview-item {
+    position: relative; width: 80px; height: 80px; border-radius: 7px; overflow: hidden;
+    border: 2px solid #d0e8d0;
+  }
+  .task-photo-preview .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+  .task-photo-preview .preview-item .remove-photo {
+    position: absolute; top: 2px; right: 2px; background: rgba(214,40,40,0.85);
+    color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px;
+    font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* BUTTONS */
+  .btn { padding: 8px 20px; border-radius: 7px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
   .btn-primary { background: var(--green); color: #fff; }
   .btn-primary:hover { background: var(--green-light); }
   .btn-secondary { background: #e8f0e8; color: var(--green); }
   .btn-secondary:hover { background: #d0e4d0; }
   .btn-danger { background: var(--red); color: #fff; }
   .btn-danger:hover { background: #b52020; }
-  .btn-sm { padding: 5px 13px; font-size: 12px; }
+  .btn-sm { padding: 4px 11px; font-size: 11px; }
 
   /* TABLE */
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  th { background: #f0f7f0; color: var(--green); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid #d0e8d0; }
-  td { padding: 10px 12px; border-bottom: 1px solid #eef3ee; vertical-align: middle; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f0f7f0; color: var(--green); font-weight: 700; padding: 9px 11px; text-align: left; border-bottom: 2px solid #d0e8d0; }
+  td { padding: 9px 11px; border-bottom: 1px solid #eef3ee; vertical-align: middle; }
   tr:hover td { background: #f8fdf8; }
 
   /* BADGES */
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
   .badge-green { background: #d8f3dc; color: var(--green); }
   .badge-orange { background: #ffe8cc; color: #b85c00; }
   .badge-red { background: #fde8e8; color: var(--red); }
   .badge-blue { background: #dbeafe; color: var(--blue); }
   .badge-gray { background: #e9ecef; color: var(--gray); }
+  .badge-gold { background: #fff3cd; color: #856404; }
 
-  /* PRIORITY COLORS */
   .priority-high { color: var(--red); font-weight: 700; }
   .priority-medium { color: var(--orange); font-weight: 700; }
   .priority-low { color: var(--green); font-weight: 700; }
 
-  /* TABS inside page */
-  .inner-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
-  .inner-tab { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #cde; background: #fff; font-size: 13px; cursor: pointer; font-weight: 500; color: var(--gray); transition: .15s; }
-  .inner-tab.active { background: var(--green); color: #fff; border-color: var(--green); }
-
-  /* SECTION HIDDEN */
-  .page { display: none; }
-  .page.active { display: block; }
+  /* SEARCH */
+  .search-bar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .search-bar input { flex: 1; min-width: 150px; padding: 8px 12px; border-radius: 7px; border: 1.5px solid #d0ddd0; font-size: 13px; outline: none; }
+  .search-bar input:focus { border-color: var(--green-light); }
 
   /* MODAL */
   .modal-overlay {
@@ -161,50 +223,56 @@
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: #fff; border-radius: 14px; padding: 28px; width: 500px; max-width: 95vw;
+    background: #fff; border-radius: 14px; padding: 24px; width: 540px; max-width: 95vw;
     max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.22);
   }
-  .modal h3 { font-size: 16px; color: var(--green); margin-bottom: 18px; }
-  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .modal h3 { font-size: 15px; color: var(--green); margin-bottom: 16px; font-weight: 700; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 
   /* TIMELINE */
   .timeline { list-style: none; padding: 0; }
-  .timeline li { display: flex; gap: 14px; margin-bottom: 16px; }
-  .timeline .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 4px; }
+  .timeline li { display: flex; gap: 12px; margin-bottom: 14px; }
+  .timeline .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 4px; }
   .timeline .dot.orange { background: var(--orange); }
   .timeline .dot.red { background: var(--red); }
   .timeline .dot.blue { background: var(--sky); }
   .timeline .content { flex: 1; }
-  .timeline .content .tl-title { font-weight: 600; font-size: 14px; }
-  .timeline .content .tl-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
-  .timeline .content .tl-body { font-size: 13px; color: #444; margin-top: 4px; line-height: 1.5; }
+  .timeline .content .tl-title { font-weight: 600; font-size: 13px; }
+  .timeline .content .tl-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .timeline .content .tl-body { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.5; }
 
-  /* ALERTS */
-  .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; }
-  .alert-info { background: #dbeafe; color: var(--blue); }
-  .alert-success { background: #d8f3dc; color: var(--green); }
+  /* ALERT */
+  .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
   .alert-warn { background: #fff3cd; color: #856404; }
+  .alert-success { background: #d8f3dc; color: var(--green); }
 
-  /* EMPTY STATE */
-  .empty { text-align: center; padding: 40px 20px; color: var(--gray); }
-  .empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  /* EMPTY */
+  .empty { text-align: center; padding: 36px 20px; color: var(--gray); }
+  .empty .empty-icon { font-size: 44px; margin-bottom: 10px; }
 
-  /* SEARCH */
-  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
-  .search-bar input { flex: 1; padding: 9px 14px; border-radius: 8px; border: 1.5px solid #d0ddd0; font-size: 14px; outline: none; }
-  .search-bar input:focus { border-color: var(--green-light); }
+  /* LIGHTBOX */
+  #lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+    z-index: 9999; align-items: center; justify-content: center;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 8px; box-shadow: 0 4px 40px rgba(0,0,0,0.6); }
+  #lightbox button { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; }
+
+  /* TASK PHOTO THUMB IN TABLE */
+  .task-thumb { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; cursor: pointer; border: 2px solid #d0e8d0; }
 
   /* RESPONSIVE */
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     .form-row { grid-template-columns: 1fr; }
     .form-row.three { grid-template-columns: 1fr; }
-    main { padding: 14px; }
+    main { padding: 12px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
+    .farm-photos-grid { grid-template-columns: 1fr; }
+    .farm-photo-slot { height: 140px; border-right: none; border-bottom: 2px solid #fff; }
   }
-
-  /* PRINT */
   @media print {
-    header, nav, .btn, .search-bar { display: none !important; }
+    header, #farm-bar, nav, .btn, .search-bar { display: none !important; }
     main { padding: 0; max-width: 100%; }
     .card { box-shadow: none; border: 1px solid #ccc; }
   }
@@ -212,7 +280,7 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="logo">🌾</div>
@@ -227,27 +295,35 @@
     </select>
     <input type="password" id="login-pass" placeholder="Password" />
     <button onclick="doLogin()">Login</button>
-    <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
-    <p style="margin-top:18px;font-size:11px;color:#aaa;">Demo passwords: admin123 / eng123</p>
+    <div class="login-error" id="login-error"></div>
+    <p style="margin-top:16px;font-size:11px;color:#aaa;">Admin: admin123 &nbsp;|&nbsp; Engineers: eng123</p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;flex-direction:column;">
   <header>
-    <div class="brand">🌾 <span>Farm Follow-Up — Almaimoon</span></div>
-    <div class="user-info">
+    <div class="brand">🌾 <span id="header-farm-name">Farm Follow-Up</span></div>
+    <div class="header-right">
       <span id="header-name"></span>
       <span class="role-badge" id="header-role"></span>
       <button class="logout" onclick="doLogout()">Logout</button>
     </div>
   </header>
+
+  <!-- FARM SWITCHER -->
+  <div id="farm-bar">
+    <button class="farm-tab" onclick="switchFarm('wusha')">🏡 Wusha Farm</button>
+    <button class="farm-tab" onclick="switchFarm('almaimoon')">🌿 Almaimoon Farm</button>
+    <button class="farm-tab" onclick="switchFarm('charity')">❤️ Wusha Charity Farm</button>
+  </div>
+
   <nav id="main-nav"></nav>
   <main id="main-content"></main>
 </div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOverlay(event)">
   <div class="modal" id="modal-box">
     <h3 id="modal-title"></h3>
     <div id="modal-body"></div>
@@ -255,20 +331,35 @@
   </div>
 </div>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
 <script>
-// ====================== DATA LAYER ======================
+// ====================== CONSTANTS ======================
 const USERS = {
-  admin:      { name: 'Farm Manager', role: 'Admin', password: 'admin123', color: '#2d6a4f' },
-  struct_eng: { name: 'Structural Engineer', role: 'Struct. Eng.', password: 'eng123', color: '#1d3557' },
-  agro_eng:   { name: 'Agricultural Engineer', role: 'Agro. Eng.', password: 'eng123', color: '#6b4226' },
-  soil_eng:   { name: 'Soil Engineer', role: 'Soil Eng.', password: 'eng123', color: '#e07b39' },
+  admin:      { name: 'Farm Manager',          role: 'Admin',        password: 'admin123', color: '#2d6a4f' },
+  struct_eng: { name: 'Structural Engineer',   role: 'Struct. Eng.', password: 'eng123',   color: '#1d3557' },
+  agro_eng:   { name: 'Agricultural Engineer', role: 'Agro. Eng.',   password: 'eng123',   color: '#6b4226' },
+  soil_eng:   { name: 'Soil Engineer',         role: 'Soil Eng.',    password: 'eng123',   color: '#e07b39' },
 };
 
-function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; } }
+const FARMS = {
+  wusha:     { name: 'Wusha Farm',          icon: '🏡', color: '#2d6a4f' },
+  almaimoon: { name: 'Almaimoon Farm',       icon: '🌿', color: '#1d7a4a' },
+  charity:   { name: 'Wusha Charity Farm',   icon: '❤️', color: '#8b2252' },
+};
+
+// ====================== DATA LAYER ======================
+function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } }
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-function getData() { return load('farm_data', { tasks: [], reports: [], visits: [], issues: [], notes: [] }); }
-function saveData(d) { save('farm_data', d); }
+function getFarmData(farmId) {
+  return load('farm_' + farmId, { tasks: [], reports: [], visits: [], issues: [], notes: [], photos: ['','',''] });
+}
+function saveFarmData(farmId, d) { save('farm_' + farmId, d); }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -276,27 +367,31 @@ function fmt(d) { if(!d) return '—'; const p = d.split('-'); return `${p[2]}/$
 function timeAgo(iso) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff/60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  if (m < 1440) return `${Math.floor(m/60)}h ago`;
-  return `${Math.floor(m/1440)}d ago`;
+  if (m < 1) return 'just now'; if (m < 60) return m+'m ago';
+  if (m < 1440) return Math.floor(m/60)+'h ago'; return Math.floor(m/1440)+'d ago';
 }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ====================== STATE ======================
 let currentUser = null;
+let currentFarm = 'wusha';
+let activePage = 'dashboard';
+let pendingPhotoSlot = null;
+let pendingTaskPhotos = [];
 
 // ====================== AUTH ======================
 function doLogin() {
   const u = document.getElementById('login-user').value;
   const p = document.getElementById('login-pass').value;
-  if (!u || !USERS[u]) { showError('Please select a user.'); return; }
-  if (p !== USERS[u].password) { showError('Wrong password.'); return; }
+  if (!u) { showLoginError('Please select a user.'); return; }
+  if (p !== USERS[u].password) { showLoginError('Wrong password.'); return; }
   currentUser = u;
   save('farm_session', u);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
 }
-function showError(msg) {
+function showLoginError(msg) {
   const el = document.getElementById('login-error');
   el.textContent = msg; el.style.display = 'block';
 }
@@ -309,7 +404,7 @@ function doLogout() {
 }
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
-// Auto-resume session
+// auto-resume
 (function() {
   const s = load('farm_session', null);
   if (s && USERS[s]) {
@@ -323,33 +418,45 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 // ====================== APP INIT ======================
 const NAV_ADMIN = [
   { id: 'dashboard', label: '📊 Dashboard' },
+  { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'tasks', label: '✅ Tasks' },
   { id: 'reports', label: '📋 Reports' },
-  { id: 'visits', label: '🚜 Field Visits' },
+  { id: 'visits', label: '🚜 Visits' },
   { id: 'issues', label: '⚠️ Issues' },
   { id: 'notes', label: '📝 Notes' },
   { id: 'team', label: '👥 Team' },
 ];
 const NAV_ENG = [
-  { id: 'dashboard', label: '📊 My Dashboard' },
+  { id: 'dashboard', label: '📊 Dashboard' },
+  { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks', label: '✅ My Tasks' },
-  { id: 'reports', label: '📋 My Reports' },
-  { id: 'visits', label: '🚜 Field Visits' },
+  { id: 'reports', label: '📋 Reports' },
+  { id: 'visits', label: '🚜 Visits' },
   { id: 'issues', label: '⚠️ Issues' },
   { id: 'notes', label: '📝 Notes' },
 ];
 
-let activePage = 'dashboard';
-
 function initApp() {
-  const u = USERS[currentUser];
-  document.getElementById('header-name').textContent = u.name;
-  document.getElementById('header-role').textContent = u.role;
-  const nav = document.getElementById('main-nav');
-  const navItems = currentUser === 'admin' ? NAV_ADMIN : NAV_ENG;
-  nav.innerHTML = navItems.map(n =>
+  document.getElementById('header-name').textContent = USERS[currentUser].name;
+  document.getElementById('header-role').textContent = USERS[currentUser].role;
+  buildNav();
+  switchFarm(currentFarm);
+}
+
+function buildNav() {
+  const items = currentUser === 'admin' ? NAV_ADMIN : NAV_ENG;
+  document.getElementById('main-nav').innerHTML = items.map(n =>
     `<button onclick="navigate('${n.id}')" id="nav-${n.id}">${n.label}</button>`
   ).join('');
+}
+
+function switchFarm(farmId) {
+  currentFarm = farmId;
+  const farm = FARMS[farmId];
+  document.getElementById('header-farm-name').textContent = farm.icon + ' ' + farm.name;
+  document.querySelectorAll('#farm-bar .farm-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', Object.keys(FARMS)[i] === farmId);
+  });
   navigate('dashboard');
 }
 
@@ -359,173 +466,256 @@ function navigate(page) {
   const btn = document.getElementById('nav-' + page);
   if (btn) btn.classList.add('active');
   const main = document.getElementById('main-content');
-  if (currentUser === 'admin') {
-    if (page === 'dashboard') main.innerHTML = renderAdminDashboard();
-    else if (page === 'tasks') main.innerHTML = renderTasks(null);
-    else if (page === 'reports') main.innerHTML = renderReports(null);
-    else if (page === 'visits') main.innerHTML = renderVisits(null);
-    else if (page === 'issues') main.innerHTML = renderIssues(null);
-    else if (page === 'notes') main.innerHTML = renderNotes(null);
-    else if (page === 'team') main.innerHTML = renderTeam();
-  } else {
-    if (page === 'dashboard') main.innerHTML = renderEngDashboard();
-    else if (page === 'my-tasks') main.innerHTML = renderTasks(currentUser);
-    else if (page === 'reports') main.innerHTML = renderReports(currentUser);
-    else if (page === 'visits') main.innerHTML = renderVisits(currentUser);
-    else if (page === 'issues') main.innerHTML = renderIssues(currentUser);
-    else if (page === 'notes') main.innerHTML = renderNotes(currentUser);
-  }
+  const isAdmin = currentUser === 'admin';
+  if (page === 'dashboard')     main.innerHTML = isAdmin ? renderAdminDashboard() : renderEngDashboard();
+  else if (page === 'farm-profile') main.innerHTML = renderFarmProfile();
+  else if (page === 'tasks' || page === 'my-tasks') main.innerHTML = renderTasks(isAdmin ? null : currentUser);
+  else if (page === 'reports')  main.innerHTML = renderReports(isAdmin ? null : currentUser);
+  else if (page === 'visits')   main.innerHTML = renderVisits(isAdmin ? null : currentUser);
+  else if (page === 'issues')   main.innerHTML = renderIssues(isAdmin ? null : currentUser);
+  else if (page === 'notes')    main.innerHTML = renderNotes(isAdmin ? null : currentUser);
+  else if (page === 'team')     main.innerHTML = renderTeam();
+}
+
+// ====================== FARM PROFILE (PHOTOS) ======================
+function renderFarmProfile() {
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+  const photos = d.photos || ['','',''];
+  const labels = ['Main View', 'Field Area', 'Infrastructure'];
+  const isAdmin = currentUser === 'admin';
+
+  return `
+  <div class="farm-header">
+    <div class="farm-header-top">
+      <h2>${farm.icon} ${farm.name}</h2>
+      ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="saveFarmInfo()">💾 Save Info</button>` : ''}
+    </div>
+    <div class="farm-photos-grid">
+      ${photos.map((ph, i) => `
+        <div class="farm-photo-slot" onclick="${isAdmin?`triggerFarmPhoto(${i})`:'openLightbox(this)'}">
+          <span class="photo-num">Photo ${i+1}</span>
+          ${ph ? `<img src="${ph}" alt="${labels[i]}" />
+            <div class="photo-label">${labels[i]}</div>
+            <div class="photo-actions">
+              ${isAdmin ? `<button onclick="event.stopPropagation();triggerFarmPhoto(${i})">Change</button>
+              <button onclick="event.stopPropagation();removeFarmPhoto(${i})">Remove</button>` : ''}
+              <button onclick="event.stopPropagation();openLightboxSrc('${ph}')">🔍 View</button>
+            </div>` :
+            `<div class="add-photo-hint"><span>📷</span>${isAdmin?'Click to add photo':'No photo'}<br><small>${labels[i]}</small></div>`}
+        </div>`).join('')}
+    </div>
+    <input type="file" id="farm-photo-input" accept="image/*" style="display:none" onchange="onFarmPhotoSelected(event)" />
+  </div>
+
+  <div class="card">
+    <h2>📝 Farm Information</h2>
+    <div class="form-row three">
+      <div class="form-group"><label>Farm Name</label>
+        <input id="fi-name" value="${esc(d.info?.name||farm.name)}" ${isAdmin?'':'readonly'} /></div>
+      <div class="form-group"><label>Location</label>
+        <input id="fi-loc" value="${esc(d.info?.location||'')}" placeholder="City / Region" ${isAdmin?'':'readonly'} /></div>
+      <div class="form-group"><label>Area (Hectares)</label>
+        <input id="fi-area" value="${esc(d.info?.area||'')}" placeholder="e.g. 50" ${isAdmin?'':'readonly'} /></div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group"><label>Crop Types</label>
+        <input id="fi-crops" value="${esc(d.info?.crops||'')}" placeholder="e.g. Wheat, Dates" ${isAdmin?'':'readonly'} /></div>
+      <div class="form-group"><label>Irrigation System</label>
+        <input id="fi-irr" value="${esc(d.info?.irrigation||'')}" placeholder="e.g. Drip, Sprinkler" ${isAdmin?'':'readonly'} /></div>
+      <div class="form-group"><label>Established</label>
+        <input id="fi-est" type="date" value="${esc(d.info?.established||'')}" ${isAdmin?'':'readonly'} /></div>
+    </div>
+    <div class="form-row one">
+      <div class="form-group"><label>Notes / Description</label>
+        <textarea id="fi-notes" ${isAdmin?'':'readonly'}>${esc(d.info?.notes||'')}</textarea></div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card green"><div class="icon">✅</div><div class="label">Open Tasks</div><div class="value">${(d.tasks||[]).filter(t=>t.status!=='Done').length}</div></div>
+    <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${(d.reports||[]).length}</div></div>
+    <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${(d.visits||[]).length}</div></div>
+    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${(d.issues||[]).filter(i=>i.status!=='Resolved').length}</div></div>
+  </div>`;
+}
+
+function triggerFarmPhoto(slot) {
+  pendingPhotoSlot = slot;
+  document.getElementById('farm-photo-input').click();
+}
+
+function onFarmPhotoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const d = getFarmData(currentFarm);
+    if (!d.photos) d.photos = ['','',''];
+    d.photos[pendingPhotoSlot] = e.target.result;
+    saveFarmData(currentFarm, d);
+    navigate('farm-profile');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function removeFarmPhoto(slot) {
+  if (!confirm('Remove this photo?')) return;
+  const d = getFarmData(currentFarm);
+  d.photos[slot] = '';
+  saveFarmData(currentFarm, d);
+  navigate('farm-profile');
+}
+
+function saveFarmInfo() {
+  const d = getFarmData(currentFarm);
+  d.info = {
+    name: document.getElementById('fi-name').value,
+    location: document.getElementById('fi-loc').value,
+    area: document.getElementById('fi-area').value,
+    crops: document.getElementById('fi-crops').value,
+    irrigation: document.getElementById('fi-irr').value,
+    established: document.getElementById('fi-est').value,
+    notes: document.getElementById('fi-notes').value,
+  };
+  saveFarmData(currentFarm, d);
+  navigate('farm-profile');
+  showToast('Farm info saved!');
+}
+
+// ====================== LIGHTBOX ======================
+function openLightbox(el) {
+  const img = el.querySelector('img');
+  if (img) openLightboxSrc(img.src);
+}
+function openLightboxSrc(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+// ====================== TOAST ======================
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d6a4f;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
 }
 
 // ====================== DASHBOARD: ADMIN ======================
 function renderAdminDashboard() {
-  const d = getData();
-  const openTasks = d.tasks.filter(t => t.status !== 'Done').length;
-  const done = d.tasks.filter(t => t.status === 'Done').length;
-  const openIssues = d.issues.filter(i => i.status !== 'Resolved').length;
-  const visits = d.visits.length;
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+  const openTasks = d.tasks.filter(t=>t.status!=='Done').length;
+  const done = d.tasks.filter(t=>t.status==='Done').length;
+  const openIssues = d.issues.filter(i=>i.status!=='Resolved').length;
 
-  const recent = [...d.reports, ...d.visits, ...d.issues]
-    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,6);
+  const recent = [...(d.reports||[]),...(d.visits||[]),...(d.issues||[])]
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
 
   const tasksByUser = {};
   d.tasks.forEach(t => {
     if (!tasksByUser[t.assignee]) tasksByUser[t.assignee] = {total:0,done:0};
     tasksByUser[t.assignee].total++;
-    if (t.status === 'Done') tasksByUser[t.assignee].done++;
+    if (t.status==='Done') tasksByUser[t.assignee].done++;
   });
 
   return `
-  <div class="stats-grid">
-    <div class="stat-card green"><div class="icon">✅</div><div class="label">Open Tasks</div><div class="value">${openTasks}</div></div>
-    <div class="stat-card blue"><div class="icon">🏆</div><div class="label">Completed Tasks</div><div class="value">${done}</div></div>
-    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${openIssues}</div></div>
-    <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${visits}</div></div>
+  <div class="alert alert-success" style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:20px">${farm.icon}</span>
+    <span>Viewing <strong>${farm.name}</strong> — use the farm switcher above to change farms</span>
   </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <div class="stats-grid">
+    <div class="stat-card orange"><div class="icon">✅</div><div class="label">Open Tasks</div><div class="value">${openTasks}</div></div>
+    <div class="stat-card green"><div class="icon">🏆</div><div class="label">Completed</div><div class="value">${done}</div></div>
+    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${openIssues}</div></div>
+    <div class="stat-card blue"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${d.visits.length}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
     <div class="card">
       <h2>👥 Team Progress</h2>
       ${Object.keys(USERS).filter(k=>k!=='admin').map(k => {
-        const info = tasksByUser[k] || {total:0,done:0};
+        const info = tasksByUser[k]||{total:0,done:0};
         const pct = info.total ? Math.round(info.done/info.total*100) : 0;
-        return `
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:14px;font-weight:600">${USERS[k].name}</span>
-            <span style="font-size:13px;color:var(--gray)">${info.done}/${info.total} tasks</span>
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:13px;font-weight:600">${USERS[k].name}</span>
+            <span style="font-size:12px;color:var(--gray)">${info.done}/${info.total}</span>
           </div>
-          <div style="background:#e8f0e8;border-radius:10px;height:8px;">
-            <div style="background:var(--green);width:${pct}%;height:8px;border-radius:10px;transition:width .3s"></div>
-          </div>
-        </div>`;
+          <div style="background:#e8f0e8;border-radius:10px;height:7px">
+            <div style="background:var(--green);width:${pct}%;height:7px;border-radius:10px"></div>
+          </div></div>`;
       }).join('')}
     </div>
-
     <div class="card">
       <h2>🕐 Recent Activity</h2>
       <ul class="timeline">
         ${recent.length ? recent.map(item => {
-          const type = item.visitDate ? 'visit' : item.priority ? 'issue' : 'report';
-          const dotClass = type==='issue' ? 'red' : type==='visit' ? 'orange' : 'blue';
-          const label = type==='visit' ? '🚜 Field Visit' : type==='issue' ? '⚠️ Issue' : '📋 Report';
-          return `<li><div class="dot ${dotClass}"></div><div class="content">
-            <div class="tl-title">${label}: ${item.title||item.farmSection||'—'}</div>
+          const isVisit = !!item.visitDate, isIssue = !!item.priority && !item.visitDate && !item.reportDate;
+          const dotCls = isIssue?'red':isVisit?'orange':'blue';
+          const label = isVisit?'🚜 Visit':isIssue?'⚠️ Issue':'📋 Report';
+          const title = item.title||item.farmSection||'—';
+          return `<li><div class="dot ${dotCls}"></div><div class="content">
+            <div class="tl-title">${label}: ${title}</div>
             <div class="tl-meta">${USERS[item.author]?.name||item.author} · ${timeAgo(item.createdAt)}</div>
-            ${item.notes||item.findings ? `<div class="tl-body">${(item.notes||item.findings||'').slice(0,80)}${(item.notes||item.findings||'').length>80?'…':''}</div>` : ''}
           </div></li>`;
         }).join('') : '<li><div class="empty"><div class="empty-icon">📭</div>No activity yet</div></li>'}
       </ul>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>⚠️ Pending Issues by Priority</h2>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-      ${['High','Medium','Low'].map(p => {
-        const cnt = d.issues.filter(i=>i.priority===p&&i.status!=='Resolved').length;
-        const cls = p==='High'?'badge-red':p==='Medium'?'badge-orange':'badge-green';
-        return `<div style="text-align:center;padding:14px 24px;background:#f8f8f8;border-radius:10px;">
-          <div style="font-size:26px;font-weight:700">${cnt}</div>
-          <span class="badge ${cls}">${p} Priority</span>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>
-  `;
+  </div>`;
 }
 
 // ====================== DASHBOARD: ENGINEER ======================
 function renderEngDashboard() {
-  const d = getData();
-  const myTasks = d.tasks.filter(t => t.assignee === currentUser);
-  const myOpen = myTasks.filter(t => t.status !== 'Done').length;
-  const myDone = myTasks.filter(t => t.status === 'Done').length;
-  const myReports = d.reports.filter(r => r.author === currentUser).length;
-  const myIssues = d.issues.filter(i => i.author === currentUser && i.status !== 'Resolved').length;
-
-  const overdue = myTasks.filter(t => t.dueDate && t.dueDate < today() && t.status !== 'Done');
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+  const myTasks = d.tasks.filter(t=>t.assignee===currentUser);
+  const myOpen = myTasks.filter(t=>t.status!=='Done').length;
+  const myDone = myTasks.filter(t=>t.status==='Done').length;
+  const overdue = myTasks.filter(t=>t.dueDate&&t.dueDate<today()&&t.status!=='Done');
 
   return `
+  <div class="alert alert-success" style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:20px">${farm.icon}</span>
+    <span>Viewing <strong>${farm.name}</strong></span>
+  </div>
+  ${overdue.length ? `<div class="alert alert-warn">⚠️ ${overdue.length} overdue task(s): ${overdue.map(t=>`<em>${t.title}</em>`).join(', ')}</div>` : ''}
   <div class="stats-grid">
     <div class="stat-card orange"><div class="icon">📋</div><div class="label">Open Tasks</div><div class="value">${myOpen}</div></div>
     <div class="stat-card green"><div class="icon">✅</div><div class="label">Completed</div><div class="value">${myDone}</div></div>
-    <div class="stat-card blue"><div class="icon">📄</div><div class="label">Reports Filed</div><div class="value">${myReports}</div></div>
-    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${myIssues}</div></div>
+    <div class="stat-card blue"><div class="icon">📄</div><div class="label">Reports</div><div class="value">${d.reports.filter(r=>r.author===currentUser).length}</div></div>
+    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${d.issues.filter(i=>i.author===currentUser&&i.status!=='Resolved').length}</div></div>
   </div>
-
-  ${overdue.length ? `<div class="alert alert-warn">⚠️ You have <strong>${overdue.length}</strong> overdue task(s): ${overdue.map(t=>`<em>${t.title}</em>`).join(', ')}</div>` : ''}
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-    <div class="card">
-      <h2>📋 My Pending Tasks</h2>
-      ${myTasks.filter(t=>t.status!=='Done').length === 0
-        ? '<div class="empty"><div class="empty-icon">🎉</div>All tasks complete!</div>'
-        : `<ul class="timeline">
-          ${myTasks.filter(t=>t.status!=='Done').slice(0,5).map(t => `
-            <li><div class="dot ${t.priority==='High'?'red':t.priority==='Medium'?'orange':''}"></div>
-            <div class="content">
-              <div class="tl-title">${t.title}</div>
-              <div class="tl-meta">Due: ${fmt(t.dueDate)} · <span class="priority-${t.priority?.toLowerCase()}">${t.priority}</span></div>
-              ${t.description ? `<div class="tl-body">${t.description.slice(0,80)}</div>` : ''}
-            </div></li>`).join('')}
-          </ul>`}
-    </div>
-    <div class="card">
-      <h2>📊 My Task Progress</h2>
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:48px;font-weight:800;color:var(--green)">${myTasks.length ? Math.round(myDone/myTasks.length*100) : 0}%</div>
-        <div style="color:var(--gray);margin-top:4px">Overall Completion</div>
-        <div style="background:#e8f0e8;border-radius:10px;height:14px;margin-top:16px;">
-          <div style="background:var(--green);width:${myTasks.length?Math.round(myDone/myTasks.length*100):0}%;height:14px;border-radius:10px;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-around;margin-top:16px;">
-          ${['Todo','In Progress','Done'].map(s => {
-            const cnt = myTasks.filter(t=>t.status===s).length;
-            const cls = s==='Done'?'badge-green':s==='In Progress'?'badge-orange':'badge-gray';
-            return `<div><div style="font-size:20px;font-weight:700">${cnt}</div><span class="badge ${cls}">${s}</span></div>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>
-  </div>
-  `;
+  <div class="card">
+    <h2>📋 My Pending Tasks — ${farm.name}</h2>
+    ${myTasks.filter(t=>t.status!=='Done').length===0
+      ? '<div class="empty"><div class="empty-icon">🎉</div>All tasks complete!</div>'
+      : `<ul class="timeline">${myTasks.filter(t=>t.status!=='Done').slice(0,6).map(t=>`
+        <li><div class="dot ${t.priority==='High'?'red':t.priority==='Medium'?'orange':''}"></div>
+        <div class="content">
+          <div class="tl-title">${t.title}</div>
+          <div class="tl-meta">Due: ${fmt(t.dueDate)} · <span class="priority-${t.priority?.toLowerCase()}">${t.priority}</span></div>
+        </div></li>`).join('')}</ul>`}
+  </div>`;
 }
 
 // ====================== TASKS ======================
 function renderTasks(filterUser) {
-  const d = getData();
-  let tasks = filterUser ? d.tasks.filter(t => t.assignee === filterUser) : d.tasks;
-  const isAdmin = currentUser === 'admin';
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+  let tasks = filterUser ? d.tasks.filter(t=>t.assignee===filterUser) : d.tasks;
+  const isAdmin = currentUser==='admin';
 
   return `
   <div class="card">
-    <h2>✅ ${isAdmin ? 'All Tasks' : 'My Tasks'}
-      ${isAdmin ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddTask()">+ New Task</button>` : ''}
+    <h2>✅ Tasks — ${farm.name}
+      ${isAdmin?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddTask()">+ New Task</button>`:''}
     </h2>
     <div class="search-bar">
       <input type="text" placeholder="Search tasks..." oninput="filterTable(this,'tasks-table')" />
-      <select onchange="filterTaskStatus(this.value)">
+      <select onchange="navigate('${isAdmin?'tasks':'my-tasks'}');filterByText('tasks-table',this.value)">
         <option value="">All Status</option>
         <option>Todo</option><option>In Progress</option><option>Done</option>
       </select>
@@ -533,23 +723,23 @@ function renderTasks(filterUser) {
     <div class="table-wrap">
       <table id="tasks-table">
         <thead><tr>
-          <th>Title</th>
-          ${isAdmin ? '<th>Assigned To</th>' : ''}
-          <th>Status</th><th>Priority</th><th>Due Date</th><th>Category</th><th>Actions</th>
+          <th>Photo</th><th>Title</th>${isAdmin?'<th>Assigned To</th>':''}
+          <th>Status</th><th>Priority</th><th>Due</th><th>Category</th><th>Actions</th>
         </tr></thead>
         <tbody>
-          ${tasks.length === 0 ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div>No tasks found</div></td></tr>` :
-          tasks.map(t => `
+          ${tasks.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📭</div>No tasks</div></td></tr>`:
+          tasks.map(t=>`
             <tr>
-              <td><strong>${t.title}</strong>${t.description?`<br><small style="color:var(--gray)">${t.description.slice(0,60)}</small>`:''}</td>
-              ${isAdmin ? `<td>${USERS[t.assignee]?.name||t.assignee}</td>` : ''}
+              <td>${t.photos&&t.photos[0]?`<img class="task-thumb" src="${t.photos[0]}" onclick="openLightboxSrc('${t.photos[0]}')" title="View photo" />`:'—'}</td>
+              <td><strong>${esc(t.title)}</strong>${t.description?`<br><small style="color:var(--gray)">${esc(t.description.slice(0,50))}</small>`:''}</td>
+              ${isAdmin?`<td>${USERS[t.assignee]?.name||t.assignee}</td>`:''}
               <td><span class="badge ${t.status==='Done'?'badge-green':t.status==='In Progress'?'badge-orange':'badge-gray'}">${t.status}</span></td>
               <td><span class="priority-${t.priority?.toLowerCase()}">${t.priority}</span></td>
-              <td>${fmt(t.dueDate)}${t.dueDate<today()&&t.status!=='Done'?'<span class="badge badge-red" style="margin-left:4px">OVERDUE</span>':''}</td>
+              <td>${fmt(t.dueDate)}${t.dueDate&&t.dueDate<today()&&t.status!=='Done'?` <span class="badge badge-red">LATE</span>`:''}</td>
               <td>${t.category||'—'}</td>
               <td style="white-space:nowrap">
                 <button class="btn btn-secondary btn-sm" onclick="openEditTask('${t.id}')">Edit</button>
-                ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Del</button>` : ''}
+                ${isAdmin?`<button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Del</button>`:''}
               </td>
             </tr>`).join('')}
         </tbody>
@@ -561,157 +751,171 @@ function renderTasks(filterUser) {
 function filterTable(input, tableId) {
   const q = input.value.toLowerCase();
   document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    row.style.display = row.textContent.toLowerCase().includes(q)?'':'none';
   });
 }
-function filterTaskStatus(status) {
-  navigate(currentUser === 'admin' ? 'tasks' : 'my-tasks');
-  if (!status) return;
-  document.querySelectorAll('#tasks-table tbody tr').forEach(row => {
-    row.style.display = row.textContent.includes(status) ? '' : 'none';
+function filterByText(tableId, q) {
+  if (!q) return;
+  document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+    row.style.display = row.textContent.includes(q)?'':'none';
   });
 }
 
-function getCategories() {
-  return {
-    admin: ['Irrigation', 'Construction', 'Equipment', 'Monitoring', 'General'],
-    struct_eng: ['Foundation', 'Drainage', 'Roads', 'Buildings', 'Fencing', 'Irrigation Infra', 'General'],
-    agro_eng: ['Planting', 'Irrigation', 'Fertilization', 'Pest Control', 'Harvesting', 'Crop Monitoring', 'General'],
-    soil_eng: ['Soil Sampling', 'Soil Analysis', 'Amendments', 'Erosion Control', 'pH Management', 'General'],
-  }[currentUser] || ['General'];
-}
-
+// pending photos for new task
 function openAddTask() {
-  openModal('Add New Task', `
-    <div class="form-row"><div class="form-group">
-      <label>Title *</label><input id="t-title" placeholder="Task title" />
-    </div><div class="form-group">
-      <label>Assigned To *</label>
-      <select id="t-assignee">
-        ${Object.keys(USERS).filter(k=>k!=='admin').map(k=>`<option value="${k}">${USERS[k].name}</option>`).join('')}
-      </select>
-    </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Status</label>
-      <select id="t-status"><option>Todo</option><option>In Progress</option><option>Done</option></select>
-    </div><div class="form-group">
-      <label>Priority</label>
-      <select id="t-priority"><option>High</option><option>Medium</option><option>Low</option></select>
-    </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Due Date</label><input id="t-due" type="date" value="${today()}" />
-    </div><div class="form-group">
-      <label>Category</label>
-      <select id="t-cat">${['Irrigation','Construction','Planting','Soil Sampling','Equipment','Monitoring','General'].map(c=>`<option>${c}</option>`).join('')}</select>
-    </div></div>
-    <div class="form-row one"><div class="form-group">
-      <label>Description</label><textarea id="t-desc" placeholder="Task details..."></textarea>
-    </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>`);
+  pendingTaskPhotos = [];
+  openModal('Add New Task', taskFormHTML(), `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveTask()">Save Task</button>`);
 }
 
 function openEditTask(id) {
-  const d = getData();
-  const t = d.tasks.find(x => x.id === id);
-  if (!t) return;
-  const isAdmin = currentUser === 'admin';
-  openModal('Edit Task', `
+  const d = getFarmData(currentFarm);
+  const t = d.tasks.find(x=>x.id===id); if(!t) return;
+  pendingTaskPhotos = [...(t.photos||[])];
+  const isAdmin = currentUser==='admin';
+  openModal('Edit Task', taskFormHTML(t, isAdmin), `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveTask('${id}')">Update Task</button>`);
+}
+
+function taskFormHTML(t, isAdmin=true) {
+  const cats = ['Irrigation','Construction','Planting','Soil Sampling','Equipment','Monitoring','Structural','Fertilization','Pest Control','General'];
+  return `
     <div class="form-row"><div class="form-group">
-      <label>Title *</label><input id="t-title" value="${esc(t.title)}" ${isAdmin?'':'readonly'} />
+      <label>Title *</label>
+      <input id="t-title" value="${esc(t?.title||'')}" placeholder="Task title" ${isAdmin||!t?'':'readonly'} />
     </div><div class="form-group">
-      <label>Assigned To</label>
-      <select id="t-assignee" ${isAdmin?'':'disabled'}>
-        ${Object.keys(USERS).filter(k=>k!=='admin').map(k=>`<option value="${k}" ${k===t.assignee?'selected':''}>${USERS[k].name}</option>`).join('')}
+      <label>Assigned To *</label>
+      <select id="t-assignee" ${isAdmin||!t?'':'disabled'}>
+        ${Object.keys(USERS).filter(k=>k!=='admin').map(k=>`<option value="${k}" ${k===(t?.assignee||'')?'selected':''}>${USERS[k].name}</option>`).join('')}
       </select>
     </div></div>
     <div class="form-row"><div class="form-group">
       <label>Status</label>
       <select id="t-status">
-        ${['Todo','In Progress','Done'].map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join('')}
+        ${['Todo','In Progress','Done'].map(s=>`<option ${s===(t?.status||'Todo')?'selected':''}>${s}</option>`).join('')}
       </select>
     </div><div class="form-group">
       <label>Priority</label>
-      <select id="t-priority" ${isAdmin?'':'disabled'}>
-        ${['High','Medium','Low'].map(p=>`<option ${p===t.priority?'selected':''}>${p}</option>`).join('')}
+      <select id="t-priority" ${isAdmin||!t?'':'disabled'}>
+        ${['High','Medium','Low'].map(p=>`<option ${p===(t?.priority||'Medium')?'selected':''}>${p}</option>`).join('')}
       </select>
     </div></div>
     <div class="form-row"><div class="form-group">
-      <label>Due Date</label><input id="t-due" type="date" value="${t.dueDate||''}" ${isAdmin?'':'readonly'} />
+      <label>Due Date</label>
+      <input id="t-due" type="date" value="${t?.dueDate||today()}" ${isAdmin||!t?'':'readonly'} />
     </div><div class="form-group">
       <label>Category</label>
-      <select id="t-cat" ${isAdmin?'':'disabled'}>
-        ${['Irrigation','Construction','Planting','Soil Sampling','Equipment','Monitoring','General'].map(c=>`<option ${c===t.category?'selected':''}>${c}</option>`).join('')}
+      <select id="t-cat" ${isAdmin||!t?'':'disabled'}>
+        ${cats.map(c=>`<option ${c===(t?.category||'')?'selected':''}>${c}</option>`).join('')}
       </select>
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Description</label><textarea id="t-desc">${esc(t.description||'')}</textarea>
+      <label>Description</label>
+      <textarea id="t-desc">${esc(t?.description||'')}</textarea>
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Progress Notes</label><textarea id="t-progress" placeholder="Add progress update...">${esc(t.progressNotes||'')}</textarea>
+      <label>Progress Notes</label>
+      <textarea id="t-progress">${esc(t?.progressNotes||'')}</textarea>
     </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask('${id}')">Update Task</button>`);
+    <div class="form-group" style="margin-bottom:0">
+      <label>📷 Task Photos (up to 3 — to visually explain the task)</label>
+      <div class="task-photo-upload" onclick="document.getElementById('task-photo-input').click()">
+        <input type="file" id="task-photo-input" accept="image/*" onchange="addTaskPhoto(event)" />
+        <div class="upload-icon">📷</div>
+        <p>Click to upload a photo</p>
+        <p style="font-size:11px;margin-top:3px">Max 3 photos · JPG, PNG</p>
+      </div>
+      <div class="task-photo-preview" id="task-photo-preview">
+        ${(pendingTaskPhotos||[]).map((ph,i)=>ph?photoPreviewItem(ph,i):'').join('')}
+      </div>
+    </div>`;
+}
+
+function photoPreviewItem(src, idx) {
+  return `<div class="preview-item" id="tprev-${idx}">
+    <img src="${src}" onclick="openLightboxSrc('${src}')" />
+    <button class="remove-photo" onclick="removeTaskPhoto(${idx})">✕</button>
+  </div>`;
+}
+
+function addTaskPhoto(event) {
+  const file = event.target.files[0]; if (!file) return;
+  if (pendingTaskPhotos.length >= 3) { alert('Maximum 3 photos per task'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const idx = pendingTaskPhotos.length;
+    pendingTaskPhotos.push(e.target.result);
+    const prev = document.getElementById('task-photo-preview');
+    if (prev) prev.insertAdjacentHTML('beforeend', photoPreviewItem(e.target.result, idx));
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function removeTaskPhoto(idx) {
+  pendingTaskPhotos[idx] = '';
+  const el = document.getElementById('tprev-'+idx);
+  if (el) el.remove();
 }
 
 function saveTask(id) {
-  const d = getData();
+  const d = getFarmData(currentFarm);
   const title = document.getElementById('t-title').value.trim();
   if (!title) { alert('Title is required'); return; }
+  const existing = id ? d.tasks.find(t=>t.id===id) : null;
   const task = {
-    id: id || uid(),
-    title,
+    id: id||uid(), title,
     assignee: document.getElementById('t-assignee').value,
     status: document.getElementById('t-status').value,
     priority: document.getElementById('t-priority').value,
     dueDate: document.getElementById('t-due').value,
     category: document.getElementById('t-cat').value,
     description: document.getElementById('t-desc').value,
-    progressNotes: document.getElementById('t-progress')?.value || '',
-    createdAt: id ? (d.tasks.find(t=>t.id===id)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+    progressNotes: document.getElementById('t-progress').value,
+    photos: pendingTaskPhotos.filter(Boolean),
+    farm: currentFarm,
+    createdAt: existing?.createdAt||new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  if (id) { const i = d.tasks.findIndex(t=>t.id===id); if(i>-1) d.tasks[i]=task; }
+  if (id) { const i=d.tasks.findIndex(t=>t.id===id); if(i>-1) d.tasks[i]=task; }
   else d.tasks.push(task);
-  saveData(d);
+  saveFarmData(currentFarm, d);
   closeModal();
-  navigate(currentUser === 'admin' ? 'tasks' : 'my-tasks');
+  navigate(currentUser==='admin'?'tasks':'my-tasks');
 }
 
 function deleteTask(id) {
   if (!confirm('Delete this task?')) return;
-  const d = getData(); d.tasks = d.tasks.filter(t => t.id !== id); saveData(d);
+  const d = getFarmData(currentFarm);
+  d.tasks = d.tasks.filter(t=>t.id!==id);
+  saveFarmData(currentFarm, d);
   navigate('tasks');
 }
 
 // ====================== REPORTS ======================
 function renderReports(filterUser) {
-  const d = getData();
-  let reports = filterUser ? d.reports.filter(r => r.author === filterUser) : d.reports;
-  const isAdmin = currentUser === 'admin';
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+  let reports = filterUser ? d.reports.filter(r=>r.author===filterUser) : d.reports;
 
   return `
   <div class="card">
-    <h2>📋 ${isAdmin ? 'All Field Reports' : 'My Reports'}
+    <h2>📋 Reports — ${farm.name}
       <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddReport()">+ New Report</button>
     </h2>
     <div class="search-bar">
       <input type="text" placeholder="Search reports..." oninput="filterTable(this,'reports-table')" />
-      <select onchange="filterReportType(this.value)">
-        <option value="">All Types</option>
-        <option>Inspection</option><option>Progress</option><option>Incident</option><option>Routine</option>
-      </select>
     </div>
     <div class="table-wrap">
       <table id="reports-table">
-        <thead><tr>
-          <th>Title</th><th>Author</th><th>Type</th><th>Date</th><th>Farm Area</th><th>Status</th><th>Actions</th>
-        </tr></thead>
+        <thead><tr><th>Title</th><th>Author</th><th>Type</th><th>Date</th><th>Area</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          ${reports.length === 0 ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div>No reports yet</div></td></tr>` :
-          reports.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(r => `
+          ${reports.length===0?`<tr><td colspan="7"><div class="empty"><div class="empty-icon">📭</div>No reports</div></td></tr>`:
+          reports.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(r=>`
             <tr>
-              <td><strong>${r.title}</strong></td>
+              <td><strong>${esc(r.title)}</strong></td>
               <td>${USERS[r.author]?.name||r.author}</td>
               <td><span class="badge badge-blue">${r.type||'General'}</span></td>
               <td>${fmt(r.reportDate)}</td>
@@ -719,8 +923,8 @@ function renderReports(filterUser) {
               <td><span class="badge ${r.reviewed?'badge-green':'badge-orange'}">${r.reviewed?'Reviewed':'Pending'}</span></td>
               <td style="white-space:nowrap">
                 <button class="btn btn-secondary btn-sm" onclick="viewReport('${r.id}')">View</button>
-                ${(isAdmin||r.author===currentUser) ? `<button class="btn btn-danger btn-sm" onclick="deleteReport('${r.id}')">Del</button>` : ''}
-                ${isAdmin&&!r.reviewed ? `<button class="btn btn-primary btn-sm" onclick="markReviewed('${r.id}')">✓ Review</button>` : ''}
+                ${(currentUser==='admin'||r.author===currentUser)?`<button class="btn btn-danger btn-sm" onclick="deleteReport('${r.id}')">Del</button>`:''}
+                ${currentUser==='admin'&&!r.reviewed?`<button class="btn btn-primary btn-sm" onclick="markReviewed('${r.id}')">✓</button>`:''}
               </td>
             </tr>`).join('')}
         </tbody>
@@ -729,101 +933,88 @@ function renderReports(filterUser) {
   </div>`;
 }
 
-function filterReportType(type) {
-  navigate(currentUser==='admin'?'reports':'reports');
-  if (!type) return;
-  document.querySelectorAll('#reports-table tbody tr').forEach(row => {
-    row.style.display = row.textContent.includes(type) ? '' : 'none';
-  });
-}
-
 function openAddReport() {
   openModal('New Field Report', `
     <div class="form-row"><div class="form-group">
-      <label>Report Title *</label><input id="r-title" placeholder="Report title" />
+      <label>Title *</label><input id="r-title" placeholder="Report title" />
     </div><div class="form-group">
-      <label>Report Type</label>
+      <label>Type</label>
       <select id="r-type"><option>Inspection</option><option>Progress</option><option>Incident</option><option>Routine</option><option>Recommendation</option></select>
     </div></div>
     <div class="form-row"><div class="form-group">
-      <label>Report Date</label><input id="r-date" type="date" value="${today()}" />
+      <label>Date</label><input id="r-date" type="date" value="${today()}" />
     </div><div class="form-group">
-      <label>Farm Area / Section</label><input id="r-area" placeholder="e.g. Block A, North Field" />
+      <label>Farm Area</label><input id="r-area" placeholder="e.g. Block A, North Field" />
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Findings / Observations *</label>
-      <textarea id="r-findings" placeholder="Describe what was found or observed..." style="min-height:100px"></textarea>
+      <label>Findings *</label>
+      <textarea id="r-findings" style="min-height:90px" placeholder="Describe observations..."></textarea>
     </div></div>
     <div class="form-row one"><div class="form-group">
       <label>Recommendations</label>
       <textarea id="r-recs" placeholder="Recommended actions..."></textarea>
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Next Follow-Up Date</label><input id="r-followup" type="date" />
+      <label>Follow-Up Date</label><input id="r-followup" type="date" />
     </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveReport()">Submit Report</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveReport()">Submit</button>`);
 }
 
 function saveReport() {
-  const d = getData();
+  const d = getFarmData(currentFarm);
   const title = document.getElementById('r-title').value.trim();
   const findings = document.getElementById('r-findings').value.trim();
-  if (!title || !findings) { alert('Title and findings are required'); return; }
+  if (!title||!findings) { alert('Title and findings are required'); return; }
   d.reports.push({
-    id: uid(), title,
-    type: document.getElementById('r-type').value,
-    reportDate: document.getElementById('r-date').value,
-    farmArea: document.getElementById('r-area').value,
-    findings,
-    recommendations: document.getElementById('r-recs').value,
-    followUpDate: document.getElementById('r-followup').value,
-    author: currentUser, reviewed: false,
-    createdAt: new Date().toISOString(),
+    id:uid(), title, type:document.getElementById('r-type').value,
+    reportDate:document.getElementById('r-date').value,
+    farmArea:document.getElementById('r-area').value,
+    findings, recommendations:document.getElementById('r-recs').value,
+    followUpDate:document.getElementById('r-followup').value,
+    author:currentUser, reviewed:false, createdAt:new Date().toISOString(),
   });
-  saveData(d); closeModal(); navigate('reports');
+  saveFarmData(currentFarm, d); closeModal(); navigate('reports');
 }
 
 function viewReport(id) {
-  const d = getData();
-  const r = d.reports.find(x=>x.id===id);
-  if (!r) return;
-  openModal('Report Details', `
+  const d = getFarmData(currentFarm); const r = d.reports.find(x=>x.id===id); if(!r) return;
+  openModal('Report: '+r.title, `
     <div style="line-height:1.7">
-      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
         <span class="badge badge-blue">${r.type}</span>
-        <span class="badge ${r.reviewed?'badge-green':'badge-orange'}">${r.reviewed?'Reviewed':'Pending Review'}</span>
+        <span class="badge ${r.reviewed?'badge-green':'badge-orange'}">${r.reviewed?'Reviewed':'Pending'}</span>
       </div>
-      <p><strong>Date:</strong> ${fmt(r.reportDate)}</p>
+      <p><strong>Date:</strong> ${fmt(r.reportDate)} &nbsp; <strong>Area:</strong> ${r.farmArea||'—'}</p>
       <p><strong>Author:</strong> ${USERS[r.author]?.name||r.author}</p>
-      <p><strong>Farm Area:</strong> ${r.farmArea||'—'}</p>
-      <hr style="margin:12px 0;border-color:#e0ead8">
-      <p><strong>Findings:</strong></p><p style="color:#444;margin-top:4px">${r.findings}</p>
-      ${r.recommendations?`<p style="margin-top:10px"><strong>Recommendations:</strong></p><p style="color:#444;margin-top:4px">${r.recommendations}</p>`:''}
-      ${r.followUpDate?`<p style="margin-top:10px"><strong>Follow-Up Date:</strong> ${fmt(r.followUpDate)}</p>`:''}
+      <hr style="margin:10px 0;border-color:#e0ead8">
+      <p><strong>Findings:</strong></p><p style="color:#444;margin-top:4px">${esc(r.findings)}</p>
+      ${r.recommendations?`<p style="margin-top:10px"><strong>Recommendations:</strong></p><p style="color:#444;margin-top:4px">${esc(r.recommendations)}</p>`:''}
+      ${r.followUpDate?`<p style="margin-top:10px"><strong>Follow-Up:</strong> ${fmt(r.followUpDate)}</p>`:''}
     </div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
 }
 
 function markReviewed(id) {
-  const d = getData(); const r = d.reports.find(x=>x.id===id);
-  if (r) { r.reviewed = true; r.reviewedBy = currentUser; r.reviewedAt = new Date().toISOString(); }
-  saveData(d); navigate('reports');
+  const d = getFarmData(currentFarm); const r = d.reports.find(x=>x.id===id);
+  if(r){r.reviewed=true;r.reviewedBy=currentUser;r.reviewedAt=new Date().toISOString();}
+  saveFarmData(currentFarm, d); navigate('reports');
 }
-
 function deleteReport(id) {
-  if (!confirm('Delete this report?')) return;
-  const d = getData(); d.reports = d.reports.filter(r=>r.id!==id); saveData(d); navigate('reports');
+  if(!confirm('Delete this report?')) return;
+  const d = getFarmData(currentFarm); d.reports=d.reports.filter(r=>r.id!==id);
+  saveFarmData(currentFarm, d); navigate('reports');
 }
 
 // ====================== FIELD VISITS ======================
 function renderVisits(filterUser) {
-  const d = getData();
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
   let visits = filterUser ? d.visits.filter(v=>v.author===filterUser) : d.visits;
 
   return `
   <div class="card">
-    <h2>🚜 Field Visits
+    <h2>🚜 Field Visits — ${farm.name}
       <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddVisit()">+ Log Visit</button>
     </h2>
     <div class="search-bar">
@@ -831,21 +1022,19 @@ function renderVisits(filterUser) {
     </div>
     <div class="table-wrap">
       <table id="visits-table">
-        <thead><tr>
-          <th>Farm Section</th><th>Engineer</th><th>Visit Date</th><th>Purpose</th><th>Duration</th><th>Actions</th>
-        </tr></thead>
+        <thead><tr><th>Section</th><th>Engineer</th><th>Date</th><th>Purpose</th><th>Duration</th><th>Actions</th></tr></thead>
         <tbody>
-          ${visits.length === 0 ? `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🚜</div>No visits logged</div></td></tr>` :
-          visits.sort((a,b)=>new Date(b.visitDate)-new Date(a.visitDate)).map(v => `
+          ${visits.length===0?`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🚜</div>No visits</div></td></tr>`:
+          visits.sort((a,b)=>new Date(b.visitDate)-new Date(a.visitDate)).map(v=>`
             <tr>
-              <td><strong>${v.farmSection}</strong></td>
+              <td><strong>${esc(v.farmSection)}</strong></td>
               <td>${USERS[v.author]?.name||v.author}</td>
               <td>${fmt(v.visitDate)}</td>
               <td>${v.purpose||'—'}</td>
               <td>${v.duration||'—'}</td>
               <td>
                 <button class="btn btn-secondary btn-sm" onclick="viewVisit('${v.id}')">View</button>
-                ${(currentUser==='admin'||v.author===currentUser) ? `<button class="btn btn-danger btn-sm" onclick="deleteVisit('${v.id}')">Del</button>` : ''}
+                ${(currentUser==='admin'||v.author===currentUser)?`<button class="btn btn-danger btn-sm" onclick="deleteVisit('${v.id}')">Del</button>`:''}
               </td>
             </tr>`).join('')}
         </tbody>
@@ -855,109 +1044,98 @@ function renderVisits(filterUser) {
 }
 
 function openAddVisit() {
-  openModal('Log Field Visit', `
+  openModal('Log Field Visit',`
     <div class="form-row"><div class="form-group">
-      <label>Farm Section / Location *</label><input id="v-section" placeholder="e.g. Block A, Greenhouse 2" />
+      <label>Farm Section *</label><input id="v-section" placeholder="e.g. Block A" />
     </div><div class="form-group">
       <label>Visit Date</label><input id="v-date" type="date" value="${today()}" />
     </div></div>
     <div class="form-row"><div class="form-group">
-      <label>Purpose of Visit</label><input id="v-purpose" placeholder="e.g. Soil sampling, Structural inspection" />
+      <label>Purpose</label><input id="v-purpose" placeholder="e.g. Soil sampling" />
     </div><div class="form-group">
-      <label>Duration (hours)</label><input id="v-duration" type="number" min="0.5" step="0.5" placeholder="e.g. 2" />
+      <label>Duration (hours)</label><input id="v-duration" type="number" min="0.5" step="0.5" />
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Observations / Notes *</label>
-      <textarea id="v-notes" placeholder="What was observed during the visit..." style="min-height:100px"></textarea>
+      <label>Observations *</label>
+      <textarea id="v-notes" style="min-height:90px" placeholder="What was observed..."></textarea>
     </div></div>
     <div class="form-row one"><div class="form-group">
       <label>Actions Taken</label>
-      <textarea id="v-actions" placeholder="What actions were performed..."></textarea>
+      <textarea id="v-actions" placeholder="What was done..."></textarea>
     </div></div>
-    <div class="form-row one"><div class="form-group">
-      <label>Follow-Up Required?</label>
-      <select id="v-followup"><option value="">No</option><option value="Yes">Yes</option></select>
-    </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveVisit()">Save Visit</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveVisit()">Save</button>`);
 }
 
 function saveVisit() {
-  const d = getData();
+  const d = getFarmData(currentFarm);
   const section = document.getElementById('v-section').value.trim();
   const notes = document.getElementById('v-notes').value.trim();
-  if (!section || !notes) { alert('Section and notes are required'); return; }
+  if(!section||!notes){alert('Section and observations are required');return;}
   d.visits.push({
-    id: uid(), farmSection: section,
-    visitDate: document.getElementById('v-date').value,
-    purpose: document.getElementById('v-purpose').value,
-    duration: document.getElementById('v-duration').value ? document.getElementById('v-duration').value + 'h' : '',
-    notes, actions: document.getElementById('v-actions').value,
-    followUp: document.getElementById('v-followup').value,
-    author: currentUser, createdAt: new Date().toISOString(),
+    id:uid(), farmSection:section,
+    visitDate:document.getElementById('v-date').value,
+    purpose:document.getElementById('v-purpose').value,
+    duration:document.getElementById('v-duration').value?document.getElementById('v-duration').value+'h':'',
+    notes, actions:document.getElementById('v-actions').value,
+    author:currentUser, createdAt:new Date().toISOString(),
   });
-  saveData(d); closeModal(); navigate('visits');
+  saveFarmData(currentFarm, d); closeModal(); navigate('visits');
 }
 
 function viewVisit(id) {
-  const d = getData(); const v = d.visits.find(x=>x.id===id);
-  if (!v) return;
-  openModal('Visit Details', `
+  const d = getFarmData(currentFarm); const v=d.visits.find(x=>x.id===id); if(!v) return;
+  openModal('Visit: '+v.farmSection,`
     <div style="line-height:1.7">
-      <p><strong>Farm Section:</strong> ${v.farmSection}</p>
       <p><strong>Engineer:</strong> ${USERS[v.author]?.name||v.author}</p>
-      <p><strong>Date:</strong> ${fmt(v.visitDate)}</p>
+      <p><strong>Date:</strong> ${fmt(v.visitDate)} &nbsp; <strong>Duration:</strong> ${v.duration||'—'}</p>
       <p><strong>Purpose:</strong> ${v.purpose||'—'}</p>
-      <p><strong>Duration:</strong> ${v.duration||'—'}</p>
       <hr style="margin:10px 0;border-color:#e0ead8">
-      <p><strong>Observations:</strong></p><p style="color:#444;margin-top:4px">${v.notes}</p>
-      ${v.actions?`<p style="margin-top:10px"><strong>Actions Taken:</strong></p><p style="color:#444;margin-top:4px">${v.actions}</p>`:''}
-      ${v.followUp?`<p style="margin-top:10px"><span class="badge badge-orange">Follow-Up Required</span></p>`:''}
+      <p><strong>Observations:</strong></p><p style="color:#444;margin-top:4px">${esc(v.notes)}</p>
+      ${v.actions?`<p style="margin-top:10px"><strong>Actions:</strong></p><p style="color:#444;margin-top:4px">${esc(v.actions)}</p>`:''}
     </div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
 }
 
 function deleteVisit(id) {
-  if (!confirm('Delete this visit?')) return;
-  const d = getData(); d.visits = d.visits.filter(v=>v.id!==id); saveData(d); navigate('visits');
+  if(!confirm('Delete?')) return;
+  const d=getFarmData(currentFarm); d.visits=d.visits.filter(v=>v.id!==id);
+  saveFarmData(currentFarm, d); navigate('visits');
 }
 
 // ====================== ISSUES ======================
 function renderIssues(filterUser) {
-  const d = getData();
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
   let issues = filterUser ? d.issues.filter(i=>i.author===filterUser) : d.issues;
 
   return `
   <div class="card">
-    <h2>⚠️ Issues & Problems
+    <h2>⚠️ Issues — ${farm.name}
       <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddIssue()">+ Report Issue</button>
     </h2>
     <div class="search-bar">
       <input type="text" placeholder="Search issues..." oninput="filterTable(this,'issues-table')" />
-      <select onchange="filterIssueStatus(this.value)">
-        <option value="">All Status</option>
-        <option>Open</option><option>In Progress</option><option>Resolved</option>
+      <select onchange="filterByText('issues-table',this.value)">
+        <option value="">All Status</option><option>Open</option><option>In Progress</option><option>Resolved</option>
       </select>
     </div>
     <div class="table-wrap">
       <table id="issues-table">
-        <thead><tr>
-          <th>Title</th><th>Reported By</th><th>Priority</th><th>Status</th><th>Category</th><th>Date</th><th>Actions</th>
-        </tr></thead>
+        <thead><tr><th>Title</th><th>By</th><th>Priority</th><th>Status</th><th>Category</th><th>Actions</th></tr></thead>
         <tbody>
-          ${issues.length === 0 ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">✅</div>No issues reported</div></td></tr>` :
-          issues.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(i => `
+          ${issues.length===0?`<tr><td colspan="6"><div class="empty"><div class="empty-icon">✅</div>No issues</div></td></tr>`:
+          issues.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(i=>`
             <tr>
-              <td><strong>${i.title}</strong></td>
+              <td><strong>${esc(i.title)}</strong></td>
               <td>${USERS[i.author]?.name||i.author}</td>
               <td><span class="priority-${i.priority?.toLowerCase()}">${i.priority}</span></td>
               <td><span class="badge ${i.status==='Resolved'?'badge-green':i.status==='In Progress'?'badge-orange':'badge-red'}">${i.status}</span></td>
               <td>${i.category||'—'}</td>
-              <td>${fmt(i.createdAt?.split('T')[0])}</td>
               <td style="white-space:nowrap">
                 <button class="btn btn-secondary btn-sm" onclick="viewIssue('${i.id}')">View</button>
-                ${(currentUser==='admin'||i.author===currentUser) ? `<button class="btn btn-secondary btn-sm" onclick="openEditIssue('${i.id}')">Edit</button>` : ''}
-                ${currentUser==='admin'&&i.status!=='Resolved' ? `<button class="btn btn-primary btn-sm" onclick="resolveIssue('${i.id}')">Resolve</button>` : ''}
+                ${(currentUser==='admin'||i.author===currentUser)?`<button class="btn btn-secondary btn-sm" onclick="openEditIssue('${i.id}')">Edit</button>`:''}
+                ${currentUser==='admin'&&i.status!=='Resolved'?`<button class="btn btn-primary btn-sm" onclick="resolveIssue('${i.id}')">Resolve</button>`:''}
               </td>
             </tr>`).join('')}
         </tbody>
@@ -966,68 +1144,57 @@ function renderIssues(filterUser) {
   </div>`;
 }
 
-function filterIssueStatus(s) {
-  navigate('issues');
-  if (!s) return;
-  document.querySelectorAll('#issues-table tbody tr').forEach(row => {
-    row.style.display = row.textContent.includes(s) ? '' : 'none';
-  });
-}
-
 function openAddIssue() {
-  openModal('Report an Issue', `
+  openModal('Report Issue',`
     <div class="form-row"><div class="form-group">
-      <label>Issue Title *</label><input id="i-title" placeholder="Brief description of the issue" />
+      <label>Title *</label><input id="i-title" placeholder="Issue title" />
     </div><div class="form-group">
       <label>Priority</label>
       <select id="i-priority"><option>High</option><option>Medium</option><option>Low</option></select>
     </div></div>
     <div class="form-row"><div class="form-group">
       <label>Category</label>
-      <select id="i-cat">
-        <option>Structural</option><option>Irrigation</option><option>Soil</option><option>Crop</option>
-        <option>Equipment</option><option>Pest/Disease</option><option>Water</option><option>General</option>
-      </select>
+      <select id="i-cat"><option>Structural</option><option>Irrigation</option><option>Soil</option><option>Crop</option><option>Equipment</option><option>Pest/Disease</option><option>Water</option><option>General</option></select>
     </div><div class="form-group">
-      <label>Location / Farm Area</label><input id="i-loc" placeholder="e.g. Block B, Pump Station" />
+      <label>Location</label><input id="i-loc" placeholder="Farm area" />
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Detailed Description *</label>
-      <textarea id="i-desc" placeholder="Describe the issue in detail..." style="min-height:100px"></textarea>
+      <label>Description *</label>
+      <textarea id="i-desc" style="min-height:90px" placeholder="Describe the issue..."></textarea>
     </div></div>
     <div class="form-row one"><div class="form-group">
       <label>Suggested Solution</label>
-      <textarea id="i-sol" placeholder="What do you suggest to fix this?"></textarea>
+      <textarea id="i-sol" placeholder="How to fix..."></textarea>
     </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveIssue()">Submit Issue</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveIssue()">Submit</button>`);
 }
 
 function saveIssue(id) {
-  const d = getData();
+  const d = getFarmData(currentFarm);
   const title = document.getElementById('i-title').value.trim();
   const desc = document.getElementById('i-desc').value.trim();
-  if (!title || !desc) { alert('Title and description are required'); return; }
+  if(!title||!desc){alert('Title and description required');return;}
+  const existing = id ? d.issues.find(x=>x.id===id) : null;
   const issue = {
-    id: id || uid(), title,
-    priority: document.getElementById('i-priority').value,
-    category: document.getElementById('i-cat').value,
-    location: document.getElementById('i-loc').value,
-    description: desc,
-    solution: document.getElementById('i-sol').value,
-    status: id ? (getData().issues.find(x=>x.id===id)?.status||'Open') : 'Open',
-    author: currentUser,
-    createdAt: id ? (d.issues.find(x=>x.id===id)?.createdAt||new Date().toISOString()) : new Date().toISOString(),
+    id:id||uid(), title,
+    priority:document.getElementById('i-priority').value,
+    category:document.getElementById('i-cat').value,
+    location:document.getElementById('i-loc').value,
+    description:desc,
+    solution:document.getElementById('i-sol').value,
+    status:existing?.status||'Open',
+    author:currentUser,
+    createdAt:existing?.createdAt||new Date().toISOString(),
   };
-  if (id) { const idx = d.issues.findIndex(x=>x.id===id); if(idx>-1) d.issues[idx]=issue; }
+  if(id){const idx=d.issues.findIndex(x=>x.id===id);if(idx>-1)d.issues[idx]=issue;}
   else d.issues.push(issue);
-  saveData(d); closeModal(); navigate('issues');
+  saveFarmData(currentFarm, d); closeModal(); navigate('issues');
 }
 
 function openEditIssue(id) {
-  const d = getData(); const i = d.issues.find(x=>x.id===id);
-  if (!i) return;
-  openModal('Edit Issue', `
+  const d=getFarmData(currentFarm); const i=d.issues.find(x=>x.id===id); if(!i) return;
+  openModal('Edit Issue',`
     <div class="form-row"><div class="form-group">
       <label>Title *</label><input id="i-title" value="${esc(i.title)}" />
     </div><div class="form-group">
@@ -1046,63 +1213,60 @@ function openEditIssue(id) {
     <div class="form-row one"><div class="form-group">
       <label>Suggested Solution</label><textarea id="i-sol">${esc(i.solution||'')}</textarea>
     </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveIssue('${id}')">Update Issue</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveIssue('${id}')">Update</button>`);
 }
 
 function viewIssue(id) {
-  const d = getData(); const i = d.issues.find(x=>x.id===id);
-  if (!i) return;
-  openModal('Issue Details', `
+  const d=getFarmData(currentFarm); const i=d.issues.find(x=>x.id===id); if(!i) return;
+  openModal('Issue: '+i.title,`
     <div style="line-height:1.7">
-      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-        <span class="priority-${i.priority?.toLowerCase()}">${i.priority} Priority</span>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <span class="priority-${i.priority?.toLowerCase()}">${i.priority}</span>
         <span class="badge ${i.status==='Resolved'?'badge-green':i.status==='In Progress'?'badge-orange':'badge-red'}">${i.status}</span>
         <span class="badge badge-blue">${i.category}</span>
       </div>
-      <p><strong>Reported by:</strong> ${USERS[i.author]?.name||i.author}</p>
-      <p><strong>Location:</strong> ${i.location||'—'}</p>
-      <p><strong>Date:</strong> ${fmt(i.createdAt?.split('T')[0])}</p>
+      <p><strong>By:</strong> ${USERS[i.author]?.name||i.author} &nbsp; <strong>Location:</strong> ${i.location||'—'}</p>
       <hr style="margin:10px 0;border-color:#e0ead8">
-      <p><strong>Description:</strong></p><p style="color:#444;margin-top:4px">${i.description}</p>
-      ${i.solution?`<p style="margin-top:10px"><strong>Suggested Solution:</strong></p><p style="color:#444;margin-top:4px">${i.solution}</p>`:''}
-      ${i.resolvedBy?`<p style="margin-top:10px"><strong>Resolved by:</strong> ${USERS[i.resolvedBy]?.name||i.resolvedBy}</p>`:''}
+      <p><strong>Description:</strong></p><p style="color:#444;margin-top:4px">${esc(i.description)}</p>
+      ${i.solution?`<p style="margin-top:10px"><strong>Solution:</strong></p><p style="color:#444;margin-top:4px">${esc(i.solution)}</p>`:''}
     </div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
 }
 
 function resolveIssue(id) {
-  if (!confirm('Mark this issue as resolved?')) return;
-  const d = getData(); const i = d.issues.find(x=>x.id===id);
-  if (i) { i.status = 'Resolved'; i.resolvedBy = currentUser; i.resolvedAt = new Date().toISOString(); }
-  saveData(d); navigate('issues');
+  if(!confirm('Mark as resolved?')) return;
+  const d=getFarmData(currentFarm); const i=d.issues.find(x=>x.id===id);
+  if(i){i.status='Resolved';i.resolvedBy=currentUser;i.resolvedAt=new Date().toISOString();}
+  saveFarmData(currentFarm, d); navigate('issues');
 }
 
 // ====================== NOTES ======================
 function renderNotes(filterUser) {
-  const d = getData();
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
   let notes = filterUser ? d.notes.filter(n=>n.author===filterUser) : d.notes;
 
   return `
   <div class="card">
-    <h2>📝 Notes & Observations
+    <h2>📝 Notes — ${farm.name}
       <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddNote()">+ Add Note</button>
     </h2>
     <div class="search-bar">
       <input type="text" placeholder="Search notes..." oninput="filterNotes(this.value)" />
     </div>
-    <div id="notes-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
-      ${notes.length === 0 ? '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📝</div>No notes yet</div>' :
-      notes.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(n => `
-        <div class="note-card" style="background:#fff;border-radius:10px;padding:18px;box-shadow:var(--shadow);border-left:4px solid ${noteColor(n.tag)}" data-text="${esc((n.title+n.content).toLowerCase())}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <strong style="font-size:14px">${n.title}</strong>
-            <span class="badge badge-${n.tag==='Important'?'red':n.tag==='Reminder'?'orange':'blue'}">${n.tag||'Note'}</span>
+    <div id="notes-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+      ${notes.length===0?'<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📝</div>No notes yet</div>':
+      notes.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(n=>`
+        <div class="note-card" style="background:#fff;border-radius:10px;padding:16px;box-shadow:var(--shadow);border-left:4px solid ${noteColor(n.tag)}" data-text="${esc((n.title+n.content).toLowerCase())}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px">
+            <strong style="font-size:13px">${esc(n.title)}</strong>
+            <span class="badge badge-${n.tag==='Important'?'red':n.tag==='Reminder'?'orange':'blue'}">${n.tag}</span>
           </div>
-          <p style="font-size:13px;color:#555;line-height:1.5;margin-bottom:10px">${n.content.slice(0,150)}${n.content.length>150?'…':''}</p>
+          <p style="font-size:12px;color:#555;line-height:1.5;margin-bottom:9px">${esc(n.content.slice(0,140))}${n.content.length>140?'…':''}</p>
           <div style="display:flex;justify-content:space-between;align-items:center">
             <small style="color:var(--gray)">${USERS[n.author]?.name||n.author} · ${timeAgo(n.createdAt)}</small>
-            ${(currentUser==='admin'||n.author===currentUser) ? `<button class="btn btn-danger btn-sm" onclick="deleteNote('${n.id}')">Del</button>` : ''}
+            ${(currentUser==='admin'||n.author===currentUser)?`<button class="btn btn-danger btn-sm" onclick="deleteNote('${n.id}')">Del</button>`:''}
           </div>
         </div>`).join('')}
     </div>
@@ -1113,12 +1277,12 @@ function noteColor(tag) {
   return tag==='Important'?'#d62828':tag==='Reminder'?'#e07b39':tag==='Info'?'#457b9d':'#40916c';
 }
 function filterNotes(q) {
-  document.querySelectorAll('.note-card').forEach(card => {
-    card.style.display = card.dataset.text.includes(q.toLowerCase()) ? '' : 'none';
+  document.querySelectorAll('.note-card').forEach(c=>{
+    c.style.display=c.dataset.text.includes(q.toLowerCase())?'':'none';
   });
 }
 function openAddNote() {
-  openModal('Add Note', `
+  openModal('Add Note',`
     <div class="form-row"><div class="form-group">
       <label>Title *</label><input id="n-title" placeholder="Note title" />
     </div><div class="form-group">
@@ -1126,107 +1290,80 @@ function openAddNote() {
       <select id="n-tag"><option>Note</option><option>Important</option><option>Reminder</option><option>Info</option></select>
     </div></div>
     <div class="form-row one"><div class="form-group">
-      <label>Content *</label><textarea id="n-content" placeholder="Write your note..." style="min-height:120px"></textarea>
+      <label>Content *</label><textarea id="n-content" style="min-height:100px" placeholder="Write your note..."></textarea>
     </div></div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNote()">Save Note</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveNote()">Save</button>`);
 }
 function saveNote() {
-  const d = getData();
-  const title = document.getElementById('n-title').value.trim();
-  const content = document.getElementById('n-content').value.trim();
-  if (!title || !content) { alert('Title and content are required'); return; }
-  d.notes.push({ id: uid(), title, content, tag: document.getElementById('n-tag').value, author: currentUser, createdAt: new Date().toISOString() });
-  saveData(d); closeModal(); navigate('notes');
+  const d=getFarmData(currentFarm);
+  const title=document.getElementById('n-title').value.trim();
+  const content=document.getElementById('n-content').value.trim();
+  if(!title||!content){alert('Title and content required');return;}
+  d.notes.push({id:uid(),title,content,tag:document.getElementById('n-tag').value,author:currentUser,createdAt:new Date().toISOString()});
+  saveFarmData(currentFarm, d); closeModal(); navigate('notes');
 }
 function deleteNote(id) {
-  if (!confirm('Delete this note?')) return;
-  const d = getData(); d.notes = d.notes.filter(n=>n.id!==id); saveData(d); navigate('notes');
+  if(!confirm('Delete?')) return;
+  const d=getFarmData(currentFarm); d.notes=d.notes.filter(n=>n.id!==id);
+  saveFarmData(currentFarm, d); navigate('notes');
 }
 
-// ====================== TEAM (ADMIN ONLY) ======================
+// ====================== TEAM (ADMIN) ======================
 function renderTeam() {
-  const d = getData();
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
   return `
+  <div class="card" style="margin-bottom:18px">
+    <h2>👥 Team Overview — ${farm.name}</h2>
+    <p style="color:var(--gray);font-size:13px">Data shown is for the currently selected farm.</p>
+  </div>
   <div class="stats-grid">
     ${Object.keys(USERS).filter(k=>k!=='admin').map(k => {
-      const u = USERS[k];
-      const myTasks = d.tasks.filter(t=>t.assignee===k);
-      const done = myTasks.filter(t=>t.status==='Done').length;
-      const open = myTasks.filter(t=>t.status!=='Done').length;
-      const reports = d.reports.filter(r=>r.author===k).length;
-      const visits = d.visits.filter(v=>v.author===k).length;
-      const pct = myTasks.length ? Math.round(done/myTasks.length*100) : 0;
+      const u=USERS[k];
+      const myTasks=d.tasks.filter(t=>t.assignee===k);
+      const done=myTasks.filter(t=>t.status==='Done').length;
+      const open=myTasks.filter(t=>t.status!=='Done').length;
+      const reports=d.reports.filter(r=>r.author===k).length;
+      const visits=d.visits.filter(v=>v.author===k).length;
+      const pct=myTasks.length?Math.round(done/myTasks.length*100):0;
       return `
       <div class="card" style="margin-bottom:0">
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-          <div style="width:48px;height:48px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700">
-            ${u.name[0]}
-          </div>
-          <div>
-            <div style="font-weight:700;font-size:16px">${u.name}</div>
-            <div style="font-size:13px;color:var(--gray)">${u.role}</div>
-          </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700">${u.name[0]}</div>
+          <div><div style="font-weight:700;font-size:15px">${u.name}</div><div style="font-size:12px;color:var(--gray)">${u.role}</div></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div style="text-align:center;background:#f8fdf8;padding:12px;border-radius:8px">
-            <div style="font-size:22px;font-weight:700;color:var(--orange)">${open}</div>
-            <div style="font-size:12px;color:var(--gray)">Open Tasks</div>
-          </div>
-          <div style="text-align:center;background:#f8fdf8;padding:12px;border-radius:8px">
-            <div style="font-size:22px;font-weight:700;color:var(--green)">${done}</div>
-            <div style="font-size:12px;color:var(--gray)">Completed</div>
-          </div>
-          <div style="text-align:center;background:#f8fdf8;padding:12px;border-radius:8px">
-            <div style="font-size:22px;font-weight:700;color:var(--sky)">${reports}</div>
-            <div style="font-size:12px;color:var(--gray)">Reports</div>
-          </div>
-          <div style="text-align:center;background:#f8fdf8;padding:12px;border-radius:8px">
-            <div style="font-size:22px;font-weight:700;color:var(--brown)">${visits}</div>
-            <div style="font-size:12px;color:var(--gray)">Field Visits</div>
-          </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="text-align:center;background:#f8fdf8;padding:10px;border-radius:7px">
+            <div style="font-size:20px;font-weight:700;color:var(--orange)">${open}</div><div style="font-size:11px;color:var(--gray)">Open Tasks</div></div>
+          <div style="text-align:center;background:#f8fdf8;padding:10px;border-radius:7px">
+            <div style="font-size:20px;font-weight:700;color:var(--green)">${done}</div><div style="font-size:11px;color:var(--gray)">Completed</div></div>
+          <div style="text-align:center;background:#f8fdf8;padding:10px;border-radius:7px">
+            <div style="font-size:20px;font-weight:700;color:var(--sky)">${reports}</div><div style="font-size:11px;color:var(--gray)">Reports</div></div>
+          <div style="text-align:center;background:#f8fdf8;padding:10px;border-radius:7px">
+            <div style="font-size:20px;font-weight:700;color:var(--brown)">${visits}</div><div style="font-size:11px;color:var(--gray)">Visits</div></div>
         </div>
-        <div style="margin-bottom:6px;display:flex;justify-content:space-between">
-          <span style="font-size:13px">Task Completion</span>
-          <span style="font-size:13px;font-weight:700">${pct}%</span>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px">Completion</span><span style="font-size:12px;font-weight:700">${pct}%</span>
         </div>
-        <div style="background:#e8f0e8;border-radius:10px;height:8px">
-          <div style="background:${u.color};width:${pct}%;height:8px;border-radius:10px"></div>
+        <div style="background:#e8f0e8;border-radius:10px;height:7px">
+          <div style="background:${u.color};width:${pct}%;height:7px;border-radius:10px"></div>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="openAssignTask('${k}')">+ Assign Task</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="openAssignTask('${k}')">+ Assign Task</button>
       </div>`;
     }).join('')}
   </div>`;
 }
 
 function openAssignTask(assignee) {
-  openModal(`Assign Task to ${USERS[assignee]?.name}`, `
-    <div class="form-row one"><div class="form-group">
-      <label>Task Title *</label><input id="t-title" placeholder="Task title" />
-    </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Priority</label>
-      <select id="t-priority"><option>High</option><option>Medium</option><option>Low</option></select>
-    </div><div class="form-group">
-      <label>Due Date</label><input id="t-due" type="date" value="${today()}" />
-    </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Category</label>
-      <select id="t-cat">${['Irrigation','Construction','Planting','Soil Sampling','Equipment','Monitoring','General'].map(c=>`<option>${c}</option>`).join('')}</select>
-    </div><div class="form-group">
-      <label>Status</label>
-      <select id="t-status"><option>Todo</option><option>In Progress</option></select>
-    </div></div>
-    <div class="form-row one"><div class="form-group">
-      <label>Description</label><textarea id="t-desc" placeholder="Task details..."></textarea>
-    </div></div>
-    <input type="hidden" id="t-assignee" value="${assignee}" />
-    <input type="hidden" id="t-progress" value="" />
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Assign Task</button>`);
+  pendingTaskPhotos = [];
+  openModal(`Assign Task to ${USERS[assignee]?.name}`, taskFormHTML({assignee}, true),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveTask()">Assign</button>`);
+  document.getElementById('t-assignee').value = assignee;
 }
 
-// ====================== MODAL UTILS ======================
+// ====================== MODAL ======================
 function openModal(title, body, footer) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').innerHTML = body;
@@ -1234,15 +1371,10 @@ function openModal(title, body, footer) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-function closeModal(e) {
-  if (!e || e.target === document.getElementById('modal-overlay')) {
-    document.getElementById('modal-overlay').classList.remove('open');
-  }
+function closeModalOverlay(e) {
+  if (e.target===document.getElementById('modal-overlay')) closeModal();
 }
-function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// Keyboard close
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 </script>
 </body>
 </html>
