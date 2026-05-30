@@ -42,12 +42,42 @@
   .login-card button:hover { background: var(--green-light); }
   .login-error { color: var(--red); font-size: 13px; margin-top: 6px; display: none; }
 
+  /* WEATHER BAR */
+  #weather-bar {
+    background: linear-gradient(90deg, #0d2b1e 0%, #1a4733 100%);
+    color: #fff; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+    padding: 6px 20px; position: sticky; top: 0; z-index: 102;
+    flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  #weather-bar .w-location {
+    font-weight: 700; font-size: 12px; opacity: .75; letter-spacing: .5px; text-transform: uppercase;
+  }
+  #weather-bar .w-item {
+    display: flex; align-items: center; gap: 6px;
+  }
+  #weather-bar .w-icon { font-size: 18px; }
+  #weather-bar .w-val { font-size: 18px; font-weight: 800; }
+  #weather-bar .w-unit { font-size: 11px; opacity: .75; }
+  #weather-bar .w-label { font-size: 11px; opacity: .7; margin-left: 2px; }
+  #weather-bar .w-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.2); }
+  #weather-bar .w-updated { font-size: 10px; opacity: .5; }
+  #weather-bar .w-condition { font-size: 12px; opacity: .8; font-style: italic; }
+  #weather-bar .w-loading { opacity: .6; font-size: 12px; }
+  #weather-bar .w-error { opacity: .7; font-size: 12px; color: #ffbba0; }
+
+  /* heat index color coding */
+  .heat-extreme { color: #ff4444 !important; }
+  .heat-very-hot { color: #ff8844 !important; }
+  .heat-hot { color: #ffcc44 !important; }
+  .heat-warm { color: #aaffaa !important; }
+
   /* APP SHELL */
   #app { display: none; min-height: 100vh; flex-direction: column; }
   header {
     background: var(--green); color: #fff;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; height: 60px; box-shadow: var(--shadow); position: sticky; top:0; z-index:100;
+    padding: 0 20px; height: 60px; box-shadow: var(--shadow); position: sticky; top: 36px; z-index:101;
   }
   header .brand { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   header .header-right { display: flex; align-items: center; gap: 10px; font-size: 13px; }
@@ -62,6 +92,7 @@
   #farm-bar {
     background: #1a4733; display: flex; align-items: center; gap: 0;
     padding: 0 16px; overflow-x: auto; border-bottom: 2px solid #0d2b1e;
+    position: sticky; top: 96px; z-index: 99;
   }
   #farm-bar .farm-tab {
     padding: 10px 20px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6);
@@ -74,6 +105,7 @@
   nav {
     background: var(--white); border-bottom: 1.5px solid #e0ead8;
     display: flex; gap: 0; padding: 0 14px; overflow-x: auto;
+    position: sticky; top: 136px; z-index: 98;
   }
   nav button {
     background: none; border: none; padding: 12px 16px; font-size: 13px; cursor: pointer;
@@ -279,6 +311,13 @@
 </style>
 </head>
 <body>
+
+<!-- WEATHER BAR (always visible) -->
+<div id="weather-bar">
+  <span class="w-location">📍 Al Dhaid, Sharjah — UAE</span>
+  <div class="w-divider"></div>
+  <span class="w-loading" id="weather-content">⏳ Loading weather...</span>
+</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -1362,6 +1401,83 @@ function openAssignTask(assignee) {
      <button class="btn btn-primary" onclick="saveTask()">Assign</button>`);
   document.getElementById('t-assignee').value = assignee;
 }
+
+// ====================== WEATHER ======================
+// Al Dhaid, Sharjah coordinates
+const WEATHER_LAT = 25.2878;
+const WEATHER_LON = 55.8890;
+const WMO_CODES = {
+  0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+  45:'Foggy', 48:'Icy fog', 51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
+  61:'Light rain', 63:'Rain', 65:'Heavy rain', 71:'Light snow', 73:'Snow', 75:'Heavy snow',
+  77:'Snow grains', 80:'Light showers', 81:'Showers', 82:'Heavy showers',
+  85:'Snow showers', 86:'Heavy snow showers', 95:'Thunderstorm',
+  96:'Thunderstorm + hail', 99:'Thunderstorm + heavy hail',
+};
+const WMO_ICONS = {
+  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️', 45:'🌫️', 48:'🌫️',
+  51:'🌦️', 53:'🌧️', 55:'🌧️', 61:'🌧️', 63:'🌧️', 65:'🌧️',
+  71:'❄️', 73:'❄️', 75:'❄️', 77:'🌨️', 80:'🌦️', 81:'🌧️', 82:'⛈️',
+  95:'⛈️', 96:'⛈️', 99:'⛈️',
+};
+
+function heatIndexClass(t) {
+  if (t >= 45) return 'heat-extreme';
+  if (t >= 38) return 'heat-very-hot';
+  if (t >= 32) return 'heat-hot';
+  if (t >= 26) return 'heat-warm';
+  return '';
+}
+
+async function fetchWeather() {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+    `&wind_speed_unit=kmh&timezone=Asia%2FDubai`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const c = data.current;
+    const temp = Math.round(c.temperature_2m);
+    const feels = Math.round(c.apparent_temperature);
+    const hum = Math.round(c.relative_humidity_2m);
+    const wind = Math.round(c.wind_speed_10m);
+    const code = c.weather_code;
+    const icon = WMO_ICONS[code] || '🌡️';
+    const cond = WMO_CODES[code] || 'Unknown';
+    const now = new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+    const heatCls = heatIndexClass(temp);
+
+    document.getElementById('weather-content').outerHTML = `
+      <div class="w-item">
+        <span class="w-icon">${icon}</span>
+        <span class="w-val ${heatCls}">${temp}°C</span>
+        <span class="w-unit">/ Feels ${feels}°C</span>
+      </div>
+      <div class="w-divider"></div>
+      <div class="w-item">
+        <span class="w-icon">💧</span>
+        <span class="w-val">${hum}%</span>
+        <span class="w-label">Humidity</span>
+      </div>
+      <div class="w-divider"></div>
+      <div class="w-item">
+        <span class="w-icon">💨</span>
+        <span class="w-val">${wind}</span>
+        <span class="w-unit">km/h</span>
+      </div>
+      <div class="w-divider"></div>
+      <span class="w-condition">${cond}</span>
+      <span class="w-updated">Updated ${now}</span>`;
+  } catch(e) {
+    const el = document.getElementById('weather-content');
+    if (el) el.outerHTML = `<span class="w-error">⚠️ Weather unavailable — check connection</span>`;
+  }
+}
+
+// fetch immediately, then refresh every 10 minutes
+fetchWeather();
+setInterval(fetchWeather, 10 * 60 * 1000);
 
 // ====================== MODAL ======================
 function openModal(title, body, footer) {
