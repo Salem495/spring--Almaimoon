@@ -643,6 +643,131 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
+// ====================== NUTRITION / pH REFERENCE ======================
+const PLANT_DATA = [
+  {
+    name: 'Mango', icon: '🥭', ph: '5.5 – 7.5', phIdeal: '6.0 – 7.0',
+    n: 'High (young) / Moderate (mature)', p: 'Moderate', k: 'High (fruiting)',
+    ca: 'Moderate', mg: 'Moderate', fe: 'Important (acidic soils)',
+    notes: 'Avoid waterlogging. Sensitive to salinity. Foliar Zn & B help fruit set.',
+    color: '#f4a261',
+  },
+  {
+    name: 'Date Palm', icon: '🌴', ph: '7.0 – 8.5', phIdeal: '7.5 – 8.0',
+    n: 'Moderate', p: 'Low–Moderate', k: 'Very High',
+    ca: 'High', mg: 'Moderate', fe: 'Moderate',
+    notes: 'Very tolerant of salinity & alkaline soils. K crucial for fruit quality. Regular Mg & Mn foliar spray.',
+    color: '#8d6e3f',
+  },
+  {
+    name: 'Fig', icon: '🫐', ph: '6.0 – 8.0', phIdeal: '6.5 – 7.5',
+    n: 'Moderate', p: 'Low–Moderate', k: 'High',
+    ca: 'High', mg: 'Low–Moderate', fe: 'Low',
+    notes: 'Tolerates slightly alkaline soils. Avoid excess N (promotes leafy growth over fruit). Drought-tolerant once established.',
+    color: '#7b4f9e',
+  },
+  {
+    name: 'Lemon Tree', icon: '🍋', ph: '5.5 – 7.0', phIdeal: '6.0 – 6.5',
+    n: 'High', p: 'Moderate', k: 'High',
+    ca: 'Moderate', mg: 'High', fe: 'High (key micronutrient)',
+    notes: 'Iron chlorosis common in alkaline soils — use chelated Fe. Needs regular Zn & Mn. Sensitive to Cl & Na salinity.',
+    color: '#f7d060',
+  },
+  {
+    name: 'Olive Tree', icon: '🫒', ph: '5.5 – 8.5', phIdeal: '6.5 – 8.0',
+    n: 'Low–Moderate', p: 'Low', k: 'Moderate',
+    ca: 'High', mg: 'Low–Moderate', fe: 'Low',
+    notes: 'Very tolerant of poor, alkaline & dry soils. Excess N reduces oil content. B deficiency causes fruit drop.',
+    color: '#6aaa64',
+  },
+  {
+    name: 'Tomato', icon: '🍅', ph: '5.8 – 7.0', phIdeal: '6.0 – 6.8',
+    n: 'High (veg.) / Reduce (fruiting)', p: 'High (early)', k: 'Very High (fruiting)',
+    ca: 'Very High', mg: 'Moderate', fe: 'Moderate',
+    notes: 'Ca deficiency → Blossom End Rot. Consistent moisture critical. EC 2–4 dS/m optimal in hydroponics.',
+    color: '#e63946',
+  },
+  {
+    name: 'Cucumber', icon: '🥒', ph: '6.0 – 7.0', phIdeal: '6.0 – 6.5',
+    n: 'High', p: 'Moderate', k: 'High',
+    ca: 'Moderate', mg: 'Moderate', fe: 'Moderate',
+    notes: 'Sensitive to Mn & B excess. Prefers warm soil (>18 °C). Adequate Ca & K reduces tip burn. EC 1.7–2.5 dS/m.',
+    color: '#52b788',
+  },
+];
+
+function renderNutritionTable() {
+  return `
+  <div class="card" style="margin-top:20px">
+    <h2>🌱 Plant Nutrition & pH Reference Guide
+      <span style="font-size:11px;font-weight:400;color:var(--gray);margin-left:8px">Optimal ranges for Al Dhaid growing conditions</span>
+    </h2>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+        <thead>
+          <tr style="background:#f0f7f0">
+            <th style="padding:10px 12px;text-align:left;color:var(--green);font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">Plant</th>
+            <th style="padding:10px 12px;text-align:center;color:var(--green);font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">pH Range</th>
+            <th style="padding:10px 12px;text-align:center;color:var(--green);font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">Ideal pH</th>
+            <th style="padding:10px 12px;text-align:center;color:#1d7a3a;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">N (Nitrogen)</th>
+            <th style="padding:10px 12px;text-align:center;color:#b85c00;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">P (Phosphorus)</th>
+            <th style="padding:10px 12px;text-align:center;color:#457b9d;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">K (Potassium)</th>
+            <th style="padding:10px 12px;text-align:center;color:#6b4226;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">Ca</th>
+            <th style="padding:10px 12px;text-align:center;color:#6c757d;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">Mg</th>
+            <th style="padding:10px 12px;text-align:center;color:#8b2252;font-weight:700;border-bottom:2px solid #d0e8d0;white-space:nowrap">Fe</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--green);font-weight:700;border-bottom:2px solid #d0e8d0">Key Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${PLANT_DATA.map((p, i) => `
+          <tr style="background:${i%2===0?'#fff':'#fafdf8'}">
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:22px">${p.icon}</span>
+                <div>
+                  <div style="font-weight:700;font-size:13px">${p.name}</div>
+                  <div style="width:30px;height:3px;background:${p.color};border-radius:2px;margin-top:2px"></div>
+                </div>
+              </div>
+            </td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center">
+              <span style="background:#e8f0e8;padding:3px 9px;border-radius:12px;font-weight:600;font-size:12px;white-space:nowrap">${p.ph}</span>
+            </td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center">
+              <span style="background:#d8f3dc;color:var(--green);padding:3px 9px;border-radius:12px;font-weight:700;font-size:12px;white-space:nowrap">${p.phIdeal}</span>
+            </td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.n)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.p)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.k)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.ca)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.mg)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;text-align:center;font-size:12px">${phNeedBadge(p.fe)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eef3ee;font-size:11.5px;color:#444;max-width:220px;line-height:1.5">${p.notes}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:12px;color:var(--gray);font-weight:600">Need level key:</span>
+      ${[['Very High','#d62828'],['High','#e07b39'],['Moderate','#457b9d'],['Low','#2d6a4f'],['Low–Moderate','#40916c']].map(([l,c])=>
+        `<span style="background:${c}18;color:${c};padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;border:1px solid ${c}44">${l}</span>`
+      ).join('')}
+    </div>
+  </div>`;
+}
+
+function phNeedBadge(text) {
+  if (!text) return '—';
+  const t = text.toLowerCase();
+  let color = '#2d6a4f', bg = '#d8f3dc';
+  if (t.includes('very high')) { color='#d62828'; bg='#fde8e8'; }
+  else if (t.includes('high')) { color='#c05c00'; bg='#ffe8cc'; }
+  else if (t.includes('moderate')) { color='#1d3557'; bg='#dbeafe'; }
+  else if (t.includes('low')) { color='#2d6a4f'; bg='#d8f3dc'; }
+  const shortText = text.replace('(young) / Moderate (mature)','*').replace('(early)','').replace('(fruiting)','').replace('(veg.) / Reduce (fruiting)','*').replace('(key micronutrient)','').replace('once established','').trim();
+  return `<span style="background:${bg};color:${color};padding:2px 7px;border-radius:10px;font-weight:700;font-size:11px;white-space:nowrap">${shortText}</span>`;
+}
+
 // ====================== DASHBOARD: ADMIN ======================
 function renderAdminDashboard() {
   const d = getFarmData(currentFarm);
@@ -703,7 +828,8 @@ function renderAdminDashboard() {
         }).join('') : '<li><div class="empty"><div class="empty-icon">📭</div>No activity yet</div></li>'}
       </ul>
     </div>
-  </div>`;
+  </div>
+  ${renderNutritionTable()}`;
 }
 
 // ====================== DASHBOARD: ENGINEER ======================
@@ -737,7 +863,8 @@ function renderEngDashboard() {
           <div class="tl-title">${t.title}</div>
           <div class="tl-meta">Due: ${fmt(t.dueDate)} · <span class="priority-${t.priority?.toLowerCase()}">${t.priority}</span></div>
         </div></li>`).join('')}</ul>`}
-  </div>`;
+  </div>
+  ${renderNutritionTable()}`;
 }
 
 // ====================== TASKS ======================
