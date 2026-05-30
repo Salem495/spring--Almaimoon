@@ -465,23 +465,60 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 
 // ====================== APP INIT ======================
 const NAV_ADMIN = [
-  { id: 'dashboard', label: '📊 Dashboard' },
+  { id: 'dashboard',    label: '📊 Dashboard' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
-  { id: 'tasks', label: '✅ Tasks' },
-  { id: 'reports', label: '📋 Reports' },
-  { id: 'visits', label: '🚜 Visits' },
-  { id: 'issues', label: '⚠️ Issues' },
-  { id: 'notes', label: '📝 Notes' },
-  { id: 'team', label: '👥 Team' },
+  { id: 'tasks',        label: '✅ Tasks' },
+  { id: 'reports',      label: '📋 Reports' },
+  { id: 'visits',       label: '🚜 Visits' },
+  { id: 'soil-tests',   label: '🧪 Soil Tests' },
+  { id: 'plant-health', label: '🌿 Plant Health' },
+  { id: 'irr-repairs',  label: '🔧 Repairs' },
+  { id: 'irr-jobs',     label: '💧 Irr. Jobs' },
+  { id: 'store',        label: '📦 Store' },
+  { id: 'issues',       label: '⚠️ Issues' },
+  { id: 'notes',        label: '📝 Notes' },
+  { id: 'team',         label: '👥 Team' },
 ];
 const NAV_ENG = [
-  { id: 'dashboard', label: '📊 Dashboard' },
+  { id: 'dashboard',    label: '📊 Dashboard' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
-  { id: 'my-tasks', label: '✅ My Tasks' },
-  { id: 'reports', label: '📋 Reports' },
-  { id: 'visits', label: '🚜 Visits' },
-  { id: 'issues', label: '⚠️ Issues' },
-  { id: 'notes', label: '📝 Notes' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'reports',      label: '📋 Reports' },
+  { id: 'visits',       label: '🚜 Visits' },
+  { id: 'issues',       label: '⚠️ Issues' },
+  { id: 'notes',        label: '📝 Notes' },
+];
+const NAV_SOIL = [
+  { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-profile', label: '🏡 Farm Profile' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'soil-tests',   label: '🧪 Soil Tests' },
+  { id: 'reports',      label: '📋 Reports' },
+  { id: 'visits',       label: '🚜 Visits' },
+  { id: 'issues',       label: '⚠️ Issues' },
+  { id: 'notes',        label: '📝 Notes' },
+];
+const NAV_AGRO = [
+  { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-profile', label: '🏡 Farm Profile' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'plant-health', label: '🌿 Plant Health' },
+  { id: 'reports',      label: '📋 Reports' },
+  { id: 'visits',       label: '🚜 Visits' },
+  { id: 'issues',       label: '⚠️ Issues' },
+  { id: 'notes',        label: '📝 Notes' },
+];
+const NAV_IRR = [
+  { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-profile', label: '🏡 Farm Profile' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'irr-repairs',  label: '🔧 Repairs' },
+  { id: 'irr-jobs',     label: '💧 Irr. Jobs' },
+  { id: 'store',        label: '📦 Store' },
+  { id: 'reports',      label: '📋 Reports' },
+  { id: 'visits',       label: '🚜 Visits' },
+  { id: 'issues',       label: '⚠️ Issues' },
+  { id: 'notes',        label: '📝 Notes' },
 ];
 
 function initApp() {
@@ -492,7 +529,11 @@ function initApp() {
 }
 
 function buildNav() {
-  const items = currentUser === 'admin' ? NAV_ADMIN : NAV_ENG;
+  const items = currentUser === 'admin' ? NAV_ADMIN
+              : currentUser === 'soil_eng' ? NAV_SOIL
+              : currentUser === 'agro_eng' ? NAV_AGRO
+              : currentUser === 'irr_eng'  ? NAV_IRR
+              : NAV_ENG;
   document.getElementById('main-nav').innerHTML = items.map(n =>
     `<button onclick="navigate('${n.id}')" id="nav-${n.id}">${n.label}</button>`
   ).join('');
@@ -521,8 +562,13 @@ function navigate(page) {
   else if (page === 'reports')  main.innerHTML = renderReports(isAdmin ? null : currentUser);
   else if (page === 'visits')   main.innerHTML = renderVisits(isAdmin ? null : currentUser);
   else if (page === 'issues')   main.innerHTML = renderIssues(isAdmin ? null : currentUser);
-  else if (page === 'notes')    main.innerHTML = renderNotes(isAdmin ? null : currentUser);
-  else if (page === 'team')     main.innerHTML = renderTeam();
+  else if (page === 'notes')        main.innerHTML = renderNotes(isAdmin ? null : currentUser);
+  else if (page === 'team')         main.innerHTML = renderTeam();
+  else if (page === 'soil-tests')   main.innerHTML = renderSoilTests();
+  else if (page === 'plant-health') main.innerHTML = renderPlantHealth();
+  else if (page === 'irr-repairs')  main.innerHTML = renderIrrRepairs();
+  else if (page === 'irr-jobs')     main.innerHTML = renderIrrJobs();
+  else if (page === 'store')        main.innerHTML = renderStore();
 }
 
 // ====================== FARM PROFILE (PHOTOS) ======================
@@ -1569,6 +1615,715 @@ function openAssignTask(assignee) {
     `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
      <button class="btn btn-primary" onclick="saveTask()">Assign</button>`);
   document.getElementById('t-assignee').value = assignee;
+}
+
+// ====================== SOIL TESTS (soil_eng) ======================
+function renderSoilTests() {
+  const d = getFarmData(currentFarm);
+  d.soilTests = d.soilTests || [];
+  const farm = FARMS[currentFarm];
+  const canEdit = currentUser === 'soil_eng' || currentUser === 'admin';
+
+  return `
+  <div class="card">
+    <h2>🧪 Weekly Soil Test Records — ${farm.name}
+      ${canEdit ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddSoilTest()">+ New Test</button>` : ''}
+    </h2>
+    <div class="search-bar">
+      <input type="text" placeholder="Search tests..." oninput="filterTable(this,'soil-table')" />
+    </div>
+    <div class="table-wrap">
+      <table id="soil-table">
+        <thead><tr>
+          <th>Week / Date</th><th>Location</th><th>pH</th><th>EC (dS/m)</th>
+          <th>N</th><th>P</th><th>K</th><th>Moisture %</th><th>Texture</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${d.soilTests.length === 0
+            ? `<tr><td colspan="11"><div class="empty"><div class="empty-icon">🧪</div>No soil tests recorded yet</div></td></tr>`
+            : d.soilTests.sort((a,b)=>new Date(b.testDate)-new Date(a.testDate)).map(t => `
+              <tr>
+                <td><strong>${fmt(t.testDate)}</strong><br><small style="color:var(--gray)">Week ${t.weekNum||'—'}</small></td>
+                <td>${esc(t.location||'—')}</td>
+                <td><span style="background:${phColor(t.ph)};color:#fff;padding:2px 8px;border-radius:8px;font-weight:700;font-size:12px">${t.ph||'—'}</span></td>
+                <td>${t.ec||'—'}</td>
+                <td>${t.nitrogen||'—'}</td>
+                <td>${t.phosphorus||'—'}</td>
+                <td>${t.potassium||'—'}</td>
+                <td>${t.moisture||'—'}</td>
+                <td>${t.texture||'—'}</td>
+                <td><span class="badge ${t.status==='Normal'?'badge-green':t.status==='Warning'?'badge-orange':'badge-red'}">${t.status||'—'}</span></td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-secondary btn-sm" onclick="viewSoilTest('${t.id}')">View</button>
+                  ${canEdit ? `<button class="btn btn-danger btn-sm" onclick="deleteSoilTest('${t.id}')">Del</button>` : ''}
+                </td>
+              </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function phColor(ph) {
+  const v = parseFloat(ph);
+  if (!v) return '#aaa';
+  if (v < 5.5) return '#d62828';
+  if (v < 6.0) return '#e07b39';
+  if (v <= 7.5) return '#2d6a4f';
+  if (v <= 8.5) return '#457b9d';
+  return '#8b2252';
+}
+
+function openAddSoilTest() {
+  const weekNum = Math.ceil((new Date() - new Date(new Date().getFullYear(),0,1)) / 604800000);
+  openModal('New Soil Test Record', `
+    <div class="form-row">
+      <div class="form-group"><label>Test Date</label><input id="st-date" type="date" value="${today()}" /></div>
+      <div class="form-group"><label>Week Number</label><input id="st-week" type="number" value="${weekNum}" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Sample Location / Block *</label><input id="st-loc" placeholder="e.g. Block A — North" /></div>
+      <div class="form-group"><label>Soil Texture</label>
+        <select id="st-texture"><option>Sandy</option><option>Sandy Loam</option><option>Loam</option><option>Clay Loam</option><option>Clay</option><option>Silty</option></select>
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group"><label>pH Value</label><input id="st-ph" type="number" step="0.1" min="3" max="10" placeholder="e.g. 7.2" /></div>
+      <div class="form-group"><label>EC (dS/m)</label><input id="st-ec" type="number" step="0.01" placeholder="e.g. 1.8" /></div>
+      <div class="form-group"><label>Moisture %</label><input id="st-moist" type="number" step="0.1" placeholder="e.g. 22" /></div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group"><label>Nitrogen (N) ppm</label><input id="st-n" type="number" step="0.1" placeholder="ppm" /></div>
+      <div class="form-group"><label>Phosphorus (P) ppm</label><input id="st-p" type="number" step="0.1" placeholder="ppm" /></div>
+      <div class="form-group"><label>Potassium (K) ppm</label><input id="st-k" type="number" step="0.1" placeholder="ppm" /></div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group"><label>Organic Matter %</label><input id="st-om" type="number" step="0.01" placeholder="%" /></div>
+      <div class="form-group"><label>Salinity (SAR)</label><input id="st-sar" type="number" step="0.1" placeholder="SAR" /></div>
+      <div class="form-group"><label>Status</label>
+        <select id="st-status"><option>Normal</option><option>Warning</option><option>Critical</option></select>
+      </div>
+    </div>
+    <div class="form-row one">
+      <div class="form-group"><label>Lab / Field Notes</label><textarea id="st-notes" placeholder="Observations, lab reference, recommendations..."></textarea></div>
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSoilTest()">Save Test</button>`);
+}
+
+function saveSoilTest() {
+  const d = getFarmData(currentFarm);
+  d.soilTests = d.soilTests || [];
+  const loc = document.getElementById('st-loc').value.trim();
+  if (!loc) { alert('Location is required'); return; }
+  d.soilTests.push({
+    id: uid(), testDate: document.getElementById('st-date').value,
+    weekNum: document.getElementById('st-week').value,
+    location: loc, texture: document.getElementById('st-texture').value,
+    ph: document.getElementById('st-ph').value,
+    ec: document.getElementById('st-ec').value,
+    moisture: document.getElementById('st-moist').value,
+    nitrogen: document.getElementById('st-n').value,
+    phosphorus: document.getElementById('st-p').value,
+    potassium: document.getElementById('st-k').value,
+    organicMatter: document.getElementById('st-om').value,
+    sar: document.getElementById('st-sar').value,
+    status: document.getElementById('st-status').value,
+    notes: document.getElementById('st-notes').value,
+    author: currentUser, createdAt: new Date().toISOString(),
+  });
+  saveFarmData(currentFarm, d); closeModal(); navigate('soil-tests');
+}
+
+function viewSoilTest(id) {
+  const d = getFarmData(currentFarm);
+  const t = d.soilTests.find(x => x.id === id); if (!t) return;
+  openModal(`Soil Test — ${fmt(t.testDate)}`, `
+    <div style="line-height:1.8">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span class="badge ${t.status==='Normal'?'badge-green':t.status==='Warning'?'badge-orange':'badge-red'}">${t.status}</span>
+        <span class="badge badge-blue">Week ${t.weekNum||'—'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        ${[['📍 Location',t.location],['🗓️ Date',fmt(t.testDate)],['🧱 Texture',t.texture],
+          ['⚗️ pH',t.ph],['⚡ EC',t.ec+' dS/m'],['💧 Moisture',t.moisture+'%'],
+          ['🟢 N',t.nitrogen+' ppm'],['🟠 P',t.phosphorus+' ppm'],['🔵 K',t.potassium+' ppm'],
+          ['🍂 Organic Matter',t.organicMatter+'%'],['🧂 SAR',t.sar],
+        ].map(([l,v])=>`<div style="background:#f8fdf8;padding:8px 12px;border-radius:8px">
+          <div style="font-size:11px;color:var(--gray)">${l}</div>
+          <div style="font-weight:700;font-size:14px">${v||'—'}</div>
+        </div>`).join('')}
+      </div>
+      ${t.notes ? `<div style="background:#f0f7f0;padding:12px;border-radius:8px"><strong>Notes:</strong><br>${esc(t.notes)}</div>` : ''}
+    </div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+}
+
+function deleteSoilTest(id) {
+  if (!confirm('Delete this test record?')) return;
+  const d = getFarmData(currentFarm);
+  d.soilTests = d.soilTests.filter(t => t.id !== id);
+  saveFarmData(currentFarm, d); navigate('soil-tests');
+}
+
+// ====================== PLANT HEALTH (agro_eng) ======================
+function renderPlantHealth() {
+  const d = getFarmData(currentFarm);
+  d.plantHealth = d.plantHealth || [];
+  const farm = FARMS[currentFarm];
+  const canEdit = currentUser === 'agro_eng' || currentUser === 'admin';
+
+  return `
+  <div class="card">
+    <h2>🌿 Plant Health & Disease Records — ${farm.name}
+      ${canEdit ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddPlantHealth()">+ New Record</button>` : ''}
+    </h2>
+    <div class="search-bar">
+      <input type="text" placeholder="Search records..." oninput="filterTable(this,'ph-table')" />
+      <select onchange="filterByText('ph-table',this.value)">
+        <option value="">All Severity</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+      </select>
+    </div>
+    ${d.plantHealth.length === 0
+      ? `<div class="empty"><div class="empty-icon">🌱</div>No plant health records yet</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px" id="ph-table">
+          ${d.plantHealth.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(r => `
+            <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;border-top:4px solid ${severityColor(r.severity)}">
+              ${r.sicknesses && r.sicknesses.some(s=>s.photo) ? `
+                <div style="display:grid;grid-template-columns:repeat(${r.sicknesses.filter(s=>s.photo).length},1fr);height:120px">
+                  ${r.sicknesses.filter(s=>s.photo).map(s=>`
+                    <div style="position:relative;overflow:hidden;cursor:pointer" onclick="openLightboxSrc('${s.photo}')">
+                      <img src="${s.photo}" style="width:100%;height:120px;object-fit:cover" />
+                      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:3px 6px">${esc(s.name||'')}</div>
+                    </div>`).join('')}
+                </div>` : ''}
+              <div style="padding:14px 16px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+                  <strong style="font-size:14px">${esc(r.title)}</strong>
+                  <span style="background:${severityColor(r.severity)}22;color:${severityColor(r.severity)};padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid ${severityColor(r.severity)}44">${r.severity}</span>
+                </div>
+                <p style="font-size:12px;color:var(--gray);margin-bottom:8px">📍 ${r.location||'—'} &nbsp;|&nbsp; 📅 ${fmt(r.recordDate)} &nbsp;|&nbsp; 🌾 ${r.plantType||'—'}</p>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+                  ${(r.sicknesses||[]).map((s,i)=>`
+                    <div style="background:#fafdf8;border-radius:7px;padding:8px 10px;font-size:12px;border-left:3px solid ${severityColor(r.severity)}">
+                      <strong>${i+1}. ${esc(s.name||'—')}</strong>
+                      ${s.desc?`<p style="color:#555;margin-top:2px;font-size:11px">${esc(s.desc)}</p>`:''}
+                    </div>`).join('')}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <small style="color:var(--gray)">${USERS[r.author]?.name||r.author} · ${timeAgo(r.createdAt)}</small>
+                  <div style="display:flex;gap:6px">
+                    ${canEdit ? `<button class="btn btn-secondary btn-sm" onclick="openEditPlantHealth('${r.id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deletePlantHealth('${r.id}')">Del</button>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>`).join('')}
+         </div>`}
+  </div>`;
+}
+
+function severityColor(s) {
+  return s==='Critical'?'#d62828':s==='High'?'#e07b39':s==='Medium'?'#e9c46a':s==='Low'?'#2d6a4f':'#aaa';
+}
+
+let pendingPhHealthPhotos = [null, null, null];
+
+function openAddPlantHealth(existingId) {
+  const d = getFarmData(currentFarm);
+  const ex = existingId ? d.plantHealth.find(x=>x.id===existingId) : null;
+  pendingPhHealthPhotos = ex ? (ex.sicknesses||[{},{},{}]).map(s=>s.photo||null) : [null,null,null];
+
+  openModal(ex ? 'Edit Plant Health Record' : 'New Plant Health Record', `
+    <div class="form-row">
+      <div class="form-group"><label>Record Title *</label><input id="ph-title" value="${esc(ex?.title||'')}" placeholder="e.g. Leaf blight outbreak" /></div>
+      <div class="form-group"><label>Record Date</label><input id="ph-date" type="date" value="${ex?.recordDate||today()}" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Plant Type / Crop</label><input id="ph-plant" value="${esc(ex?.plantType||'')}" placeholder="e.g. Mango, Tomato" /></div>
+      <div class="form-group"><label>Location / Block</label><input id="ph-loc" value="${esc(ex?.location||'')}" placeholder="e.g. Block C" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Severity</label>
+        <select id="ph-sev">${['Low','Medium','High','Critical'].map(s=>`<option ${s===(ex?.severity||'Medium')?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Treatment Applied</label><input id="ph-treat" value="${esc(ex?.treatment||'')}" placeholder="e.g. Fungicide spray" /></div>
+    </div>
+    <hr style="margin:12px 0;border-color:#e0ead8" />
+    <p style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px">🦠 Sickness / Disease Lines (up to 3)</p>
+    ${[0,1,2].map(i => {
+      const s = ex?.sicknesses?.[i] || {};
+      return `
+      <div style="background:#f8fdf8;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #d0e8d0">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">Disease #${i+1}</div>
+        <div class="form-row">
+          <div class="form-group"><label>Disease / Sickness Name</label><input id="ph-s${i}-name" value="${esc(s.name||'')}" placeholder="e.g. Powdery Mildew" /></div>
+          <div class="form-group"><label>Affected Area %</label><input id="ph-s${i}-pct" type="number" min="0" max="100" value="${s.pct||''}" placeholder="%" /></div>
+        </div>
+        <div class="form-row one">
+          <div class="form-group"><label>Description / Symptoms</label><textarea id="ph-s${i}-desc" style="min-height:55px" placeholder="Describe symptoms...">${esc(s.desc||'')}</textarea></div>
+        </div>
+        <div class="form-group"><label>📷 Photo</label>
+          <div class="task-photo-upload" onclick="document.getElementById('phph-input-${i}').click()" style="padding:10px">
+            <input type="file" id="phph-input-${i}" accept="image/*" onchange="setPlantHealthPhoto(event,${i})" />
+            <div style="font-size:11px;color:var(--gray)">📷 ${s.photo?'Photo uploaded — click to change':'Click to add photo'}</div>
+          </div>
+          ${s.photo||pendingPhHealthPhotos[i] ? `<div style="margin-top:6px"><img src="${s.photo||pendingPhHealthPhotos[i]}" style="width:70px;height:70px;object-fit:cover;border-radius:7px;border:2px solid #d0e8d0;cursor:pointer" onclick="openLightboxSrc('${s.photo||pendingPhHealthPhotos[i]}')" /></div>` : ''}
+          <div id="phph-prev-${i}"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePlantHealth('${existingId||''}')">Save Record</button>`);
+}
+function openEditPlantHealth(id) { openAddPlantHealth(id); }
+
+function setPlantHealthPhoto(event, idx) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingPhHealthPhotos[idx] = e.target.result;
+    const prev = document.getElementById('phph-prev-' + idx);
+    if (prev) prev.innerHTML = `<img src="${e.target.result}" style="width:70px;height:70px;object-fit:cover;border-radius:7px;border:2px solid #d0e8d0;margin-top:6px;cursor:pointer" onclick="openLightboxSrc('${e.target.result}')" />`;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function savePlantHealth(id) {
+  const d = getFarmData(currentFarm);
+  d.plantHealth = d.plantHealth || [];
+  const title = document.getElementById('ph-title').value.trim();
+  if (!title) { alert('Title is required'); return; }
+  const sicknesses = [0,1,2].map(i => ({
+    name: document.getElementById(`ph-s${i}-name`).value.trim(),
+    pct: document.getElementById(`ph-s${i}-pct`).value,
+    desc: document.getElementById(`ph-s${i}-desc`).value.trim(),
+    photo: pendingPhHealthPhotos[i] || '',
+  })).filter(s => s.name);
+  const rec = {
+    id: id||uid(), title,
+    recordDate: document.getElementById('ph-date').value,
+    plantType: document.getElementById('ph-plant').value,
+    location: document.getElementById('ph-loc').value,
+    severity: document.getElementById('ph-sev').value,
+    treatment: document.getElementById('ph-treat').value,
+    sicknesses, author: currentUser,
+    createdAt: (id ? d.plantHealth.find(x=>x.id===id)?.createdAt : null) || new Date().toISOString(),
+  };
+  if (id) { const i=d.plantHealth.findIndex(x=>x.id===id); if(i>-1) d.plantHealth[i]=rec; }
+  else d.plantHealth.push(rec);
+  saveFarmData(currentFarm, d); closeModal(); navigate('plant-health');
+}
+
+function deletePlantHealth(id) {
+  if (!confirm('Delete this record?')) return;
+  const d = getFarmData(currentFarm);
+  d.plantHealth = d.plantHealth.filter(x=>x.id!==id);
+  saveFarmData(currentFarm, d); navigate('plant-health');
+}
+
+// ====================== IRRIGATION REPAIRS (irr_eng) ======================
+function renderIrrRepairs() {
+  const d = getFarmData(currentFarm);
+  d.irrRepairs = d.irrRepairs || [];
+  const farm = FARMS[currentFarm];
+  const canEdit = currentUser === 'irr_eng' || currentUser === 'admin';
+
+  return `
+  <div class="card">
+    <h2>🔧 Irrigation Repair Reports — ${farm.name}
+      ${canEdit ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddRepair()">+ New Repair</button>` : ''}
+    </h2>
+    <div class="search-bar">
+      <input type="text" placeholder="Search..." oninput="filterTable(this,'repair-table')" />
+      <select onchange="filterByText('repair-table',this.value)">
+        <option value="">All Status</option><option>Pending</option><option>In Progress</option><option>Completed</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="repair-table">
+        <thead><tr><th>Date</th><th>Location</th><th>Issue Type</th><th>Priority</th><th>Status</th><th>Cost</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${d.irrRepairs.length === 0
+            ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔧</div>No repair records</div></td></tr>`
+            : d.irrRepairs.sort((a,b)=>new Date(b.repairDate)-new Date(a.repairDate)).map(r=>`
+              <tr>
+                <td>${fmt(r.repairDate)}</td>
+                <td><strong>${esc(r.location)}</strong></td>
+                <td>${r.issueType||'—'}</td>
+                <td><span class="priority-${r.priority?.toLowerCase()}">${r.priority}</span></td>
+                <td><span class="badge ${r.status==='Completed'?'badge-green':r.status==='In Progress'?'badge-orange':'badge-red'}">${r.status}</span></td>
+                <td>${r.cost?r.cost+' AED':'—'}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-secondary btn-sm" onclick="viewRepair('${r.id}')">View</button>
+                  ${canEdit?`<button class="btn btn-secondary btn-sm" onclick="openEditRepair('${r.id}')">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteRepair('${r.id}')">Del</button>`:''}
+                </td>
+              </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function repairFormHTML(r) {
+  return `
+    <div class="form-row">
+      <div class="form-group"><label>Repair Date</label><input id="rp-date" type="date" value="${r?.repairDate||today()}" /></div>
+      <div class="form-group"><label>Location / Zone *</label><input id="rp-loc" value="${esc(r?.location||'')}" placeholder="e.g. Zone 3 drip line" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Issue Type</label>
+        <select id="rp-type">${['Pipe Leak','Valve Failure','Pump Issue','Filter Blockage','Drip Emitter','Sprinkler Head','Controller Fault','Other'].map(t=>`<option ${t===(r?.issueType||'')?'selected':''}>${t}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Priority</label>
+        <select id="rp-pri">${['High','Medium','Low'].map(p=>`<option ${p===(r?.priority||'Medium')?'selected':''}>${p}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label>
+        <select id="rp-status">${['Pending','In Progress','Completed'].map(s=>`<option ${s===(r?.status||'Pending')?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Estimated Cost (AED)</label><input id="rp-cost" type="number" value="${r?.cost||''}" placeholder="0.00" /></div>
+    </div>
+    <div class="form-row one"><div class="form-group"><label>Problem Description *</label>
+      <textarea id="rp-desc" style="min-height:80px" placeholder="Describe the repair problem...">${esc(r?.description||'')}</textarea>
+    </div></div>
+    <div class="form-row one"><div class="form-group"><label>Work Carried Out</label>
+      <textarea id="rp-work" placeholder="What was done to fix it...">${esc(r?.workDone||'')}</textarea>
+    </div></div>
+    <div class="form-row one"><div class="form-group"><label>Materials Used</label>
+      <textarea id="rp-mats" placeholder="e.g. 10m 20mm pipe, 2 elbow joints..." style="min-height:55px">${esc(r?.materialsUsed||'')}</textarea>
+    </div></div>`;
+}
+
+function openAddRepair() {
+  openModal('New Repair Report', repairFormHTML(null),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveRepair()">Save Report</button>`);
+}
+function openEditRepair(id) {
+  const d=getFarmData(currentFarm); const r=d.irrRepairs.find(x=>x.id===id); if(!r) return;
+  openModal('Edit Repair Report', repairFormHTML(r),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveRepair('${id}')">Update</button>`);
+}
+function saveRepair(id) {
+  const d=getFarmData(currentFarm); d.irrRepairs=d.irrRepairs||[];
+  const loc=document.getElementById('rp-loc').value.trim();
+  const desc=document.getElementById('rp-desc').value.trim();
+  if(!loc||!desc){alert('Location and description required');return;}
+  const rec={
+    id:id||uid(), repairDate:document.getElementById('rp-date').value,
+    location:loc, issueType:document.getElementById('rp-type').value,
+    priority:document.getElementById('rp-pri').value,
+    status:document.getElementById('rp-status').value,
+    cost:document.getElementById('rp-cost').value,
+    description:desc, workDone:document.getElementById('rp-work').value,
+    materialsUsed:document.getElementById('rp-mats').value,
+    author:currentUser,
+    createdAt:(id?d.irrRepairs.find(x=>x.id===id)?.createdAt:null)||new Date().toISOString(),
+  };
+  if(id){const i=d.irrRepairs.findIndex(x=>x.id===id);if(i>-1)d.irrRepairs[i]=rec;}
+  else d.irrRepairs.push(rec);
+  saveFarmData(currentFarm,d); closeModal(); navigate('irr-repairs');
+}
+function viewRepair(id) {
+  const d=getFarmData(currentFarm); const r=d.irrRepairs.find(x=>x.id===id); if(!r) return;
+  openModal('Repair: '+r.location, `
+    <div style="line-height:1.8">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="badge ${r.status==='Completed'?'badge-green':r.status==='In Progress'?'badge-orange':'badge-red'}">${r.status}</span>
+        <span class="priority-${r.priority?.toLowerCase()}">${r.priority}</span>
+        <span class="badge badge-blue">${r.issueType}</span>
+      </div>
+      <p><strong>Date:</strong> ${fmt(r.repairDate)} &nbsp; <strong>Cost:</strong> ${r.cost?r.cost+' AED':'—'}</p>
+      <hr style="margin:10px 0;border-color:#e0ead8">
+      <p><strong>Problem:</strong></p><p style="color:#444">${esc(r.description)}</p>
+      ${r.workDone?`<p style="margin-top:10px"><strong>Work Done:</strong></p><p style="color:#444">${esc(r.workDone)}</p>`:''}
+      ${r.materialsUsed?`<p style="margin-top:10px"><strong>Materials Used:</strong></p><p style="color:#444;white-space:pre-line">${esc(r.materialsUsed)}</p>`:''}
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+}
+function deleteRepair(id) {
+  if(!confirm('Delete?')) return;
+  const d=getFarmData(currentFarm); d.irrRepairs=d.irrRepairs.filter(x=>x.id!==id);
+  saveFarmData(currentFarm,d); navigate('irr-repairs');
+}
+
+// ====================== IRRIGATION JOBS (irr_eng) ======================
+function renderIrrJobs() {
+  const d = getFarmData(currentFarm);
+  d.irrJobs = d.irrJobs || [];
+  const farm = FARMS[currentFarm];
+  const canEdit = currentUser === 'irr_eng' || currentUser === 'admin';
+
+  return `
+  <div class="card">
+    <h2>💧 Irrigation New Jobs — ${farm.name}
+      ${canEdit?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddJob()">+ New Job</button>`:''}
+    </h2>
+    <div class="search-bar">
+      <input type="text" placeholder="Search jobs..." oninput="filterTable(this,'jobs-table')" />
+    </div>
+    <div class="table-wrap">
+      <table id="jobs-table">
+        <thead><tr><th>Date</th><th>Job Title</th><th>Zone / Area</th><th>Status</th><th>Mat. Bought</th><th>Mat. Used</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${d.irrJobs.length===0
+            ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">💧</div>No irrigation jobs</div></td></tr>`
+            : d.irrJobs.sort((a,b)=>new Date(b.jobDate)-new Date(a.jobDate)).map(j=>`
+              <tr>
+                <td>${fmt(j.jobDate)}</td>
+                <td><strong>${esc(j.title)}</strong></td>
+                <td>${j.zone||'—'}</td>
+                <td><span class="badge ${j.status==='Completed'?'badge-green':j.status==='In Progress'?'badge-orange':'badge-gray'}">${j.status}</span></td>
+                <td style="font-size:12px;max-width:140px">${j.matBought?esc(j.matBought.slice(0,60))+'…':'—'}</td>
+                <td style="font-size:12px;max-width:140px">${j.matUsed?esc(j.matUsed.slice(0,60))+'…':'—'}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-secondary btn-sm" onclick="viewJob('${j.id}')">View</button>
+                  ${canEdit?`<button class="btn btn-secondary btn-sm" onclick="openEditJob('${j.id}')">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteJob('${j.id}')">Del</button>`:''}
+                </td>
+              </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function jobFormHTML(j) {
+  return `
+    <div class="form-row">
+      <div class="form-group"><label>Job Title *</label><input id="jb-title" value="${esc(j?.title||'')}" placeholder="e.g. Install drip system Block D" /></div>
+      <div class="form-group"><label>Job Date</label><input id="jb-date" type="date" value="${j?.jobDate||today()}" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Zone / Area</label><input id="jb-zone" value="${esc(j?.zone||'')}" placeholder="e.g. Block D — Mango section" /></div>
+      <div class="form-group"><label>Status</label>
+        <select id="jb-status">${['Planned','In Progress','Completed'].map(s=>`<option ${s===(j?.status||'Planned')?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="form-row one"><div class="form-group"><label>Job Description</label>
+      <textarea id="jb-desc" placeholder="Describe the new irrigation work...">${esc(j?.description||'')}</textarea>
+    </div></div>
+    <div class="form-row one"><div class="form-group">
+      <label>📦 Materials Bought <span style="font-size:11px;color:var(--gray)">(item — qty — unit price)</span></label>
+      <textarea id="jb-matbought" style="min-height:80px" placeholder="e.g.&#10;20mm HDPE pipe — 200m — 2.5 AED/m&#10;Drip emitters — 500pcs — 0.8 AED&#10;Ball valve 1in — 4pcs — 15 AED">${esc(j?.matBought||'')}</textarea>
+    </div></div>
+    <div class="form-row one"><div class="form-group">
+      <label>🔩 Materials Used</label>
+      <textarea id="jb-matused" style="min-height:70px" placeholder="e.g.&#10;20mm HDPE pipe — 180m&#10;Drip emitters — 480pcs">${esc(j?.matUsed||'')}</textarea>
+    </div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Total Cost (AED)</label><input id="jb-cost" type="number" value="${j?.cost||''}" placeholder="0.00" /></div>
+      <div class="form-group"><label>Contractor / Team</label><input id="jb-team" value="${esc(j?.team||'')}" placeholder="e.g. Internal / Al Noor Co." /></div>
+    </div>`;
+}
+
+function openAddJob() {
+  openModal('New Irrigation Job', jobFormHTML(null),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveJob()">Save Job</button>`);
+}
+function openEditJob(id) {
+  const d=getFarmData(currentFarm); const j=d.irrJobs.find(x=>x.id===id); if(!j) return;
+  openModal('Edit Irrigation Job', jobFormHTML(j),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveJob('${id}')">Update</button>`);
+}
+function saveJob(id) {
+  const d=getFarmData(currentFarm); d.irrJobs=d.irrJobs||[];
+  const title=document.getElementById('jb-title').value.trim();
+  if(!title){alert('Title required');return;}
+  const rec={
+    id:id||uid(), title, jobDate:document.getElementById('jb-date').value,
+    zone:document.getElementById('jb-zone').value,
+    status:document.getElementById('jb-status').value,
+    description:document.getElementById('jb-desc').value,
+    matBought:document.getElementById('jb-matbought').value,
+    matUsed:document.getElementById('jb-matused').value,
+    cost:document.getElementById('jb-cost').value,
+    team:document.getElementById('jb-team').value,
+    author:currentUser,
+    createdAt:(id?d.irrJobs.find(x=>x.id===id)?.createdAt:null)||new Date().toISOString(),
+  };
+  if(id){const i=d.irrJobs.findIndex(x=>x.id===id);if(i>-1)d.irrJobs[i]=rec;}
+  else d.irrJobs.push(rec);
+  saveFarmData(currentFarm,d); closeModal(); navigate('irr-jobs');
+}
+function viewJob(id) {
+  const d=getFarmData(currentFarm); const j=d.irrJobs.find(x=>x.id===id); if(!j) return;
+  openModal('Job: '+j.title, `
+    <div style="line-height:1.8">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="badge ${j.status==='Completed'?'badge-green':j.status==='In Progress'?'badge-orange':'badge-gray'}">${j.status}</span>
+      </div>
+      <p><strong>Date:</strong> ${fmt(j.jobDate)} &nbsp; <strong>Zone:</strong> ${j.zone||'—'} &nbsp; <strong>Cost:</strong> ${j.cost?j.cost+' AED':'—'}</p>
+      <p><strong>Team:</strong> ${j.team||'—'}</p>
+      ${j.description?`<hr style="margin:10px 0;border-color:#e0ead8"><p><strong>Description:</strong></p><p style="color:#444">${esc(j.description)}</p>`:''}
+      ${j.matBought?`<p style="margin-top:10px"><strong>📦 Materials Bought:</strong></p><pre style="color:#444;font-size:12px;background:#f8fdf8;padding:10px;border-radius:8px;white-space:pre-wrap">${esc(j.matBought)}</pre>`:''}
+      ${j.matUsed?`<p style="margin-top:10px"><strong>🔩 Materials Used:</strong></p><pre style="color:#444;font-size:12px;background:#f8fdf8;padding:10px;border-radius:8px;white-space:pre-wrap">${esc(j.matUsed)}</pre>`:''}
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
+}
+function deleteJob(id) {
+  if(!confirm('Delete?')) return;
+  const d=getFarmData(currentFarm); d.irrJobs=d.irrJobs.filter(x=>x.id!==id);
+  saveFarmData(currentFarm,d); navigate('irr-jobs');
+}
+
+// ====================== STORE INVENTORY (irr_eng) ======================
+function renderStore() {
+  const d = getFarmData(currentFarm);
+  d.storeItems = d.storeItems || [];
+  const farm = FARMS[currentFarm];
+  const canEdit = currentUser === 'irr_eng' || currentUser === 'admin';
+  const totalItems = d.storeItems.length;
+  const lowStock = d.storeItems.filter(s => parseFloat(s.balance) <= parseFloat(s.minQty||0)).length;
+
+  return `
+  <div class="stats-grid" style="margin-bottom:16px">
+    <div class="stat-card blue"><div class="icon">📦</div><div class="label">Total Items</div><div class="value">${totalItems}</div></div>
+    <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Low Stock</div><div class="value">${lowStock}</div></div>
+    <div class="stat-card green"><div class="icon">✅</div><div class="label">In Stock</div><div class="value">${totalItems-lowStock}</div></div>
+  </div>
+  <div class="card">
+    <h2>📦 Store Inventory — ${farm.name}
+      ${canEdit?`<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddStoreItem()">+ Add Item</button>`:''}
+    </h2>
+    <div class="search-bar">
+      <input type="text" placeholder="Search items..." oninput="filterTable(this,'store-table')" />
+      <select onchange="filterByText('store-table',this.value)">
+        <option value="">All Categories</option>
+        <option>Pipes & Fittings</option><option>Valves</option><option>Pumps</option>
+        <option>Filters</option><option>Emitters</option><option>Fertilizers</option>
+        <option>Chemicals</option><option>Tools</option><option>Other</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="store-table">
+        <thead><tr><th>Item Name</th><th>Category</th><th>Unit</th><th>In</th><th>Out</th><th>Balance</th><th>Min. Stock</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${d.storeItems.length===0
+            ? `<tr><td colspan="10"><div class="empty"><div class="empty-icon">📦</div>No store items yet</div></td></tr>`
+            : d.storeItems.map(s => {
+              const bal = parseFloat(s.balance)||0;
+              const min = parseFloat(s.minQty)||0;
+              const stockStatus = bal<=0?'Out of Stock':bal<=min?'Low Stock':'In Stock';
+              const stockCls = bal<=0?'badge-red':bal<=min?'badge-orange':'badge-green';
+              return `<tr>
+                <td><strong>${esc(s.name)}</strong>${s.brand?`<br><small style="color:var(--gray)">${esc(s.brand)}</small>`:''}</td>
+                <td>${s.category||'—'}</td>
+                <td>${s.unit||'—'}</td>
+                <td style="color:var(--green);font-weight:700">${s.qtyIn||0}</td>
+                <td style="color:var(--red);font-weight:700">${s.qtyOut||0}</td>
+                <td><strong style="font-size:15px">${s.balance||0}</strong></td>
+                <td>${s.minQty||'—'}</td>
+                <td>${s.storeLoc||'—'}</td>
+                <td><span class="badge ${stockCls}">${stockStatus}</span></td>
+                <td style="white-space:nowrap">
+                  ${canEdit?`<button class="btn btn-secondary btn-sm" onclick="openStockMovement('${s.id}')">± Stock</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openEditStoreItem('${s.id}')">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteStoreItem('${s.id}')">Del</button>`:''}
+                </td>
+              </tr>`;}).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function storeItemFormHTML(s) {
+  const cats = ['Pipes & Fittings','Valves','Pumps','Filters','Emitters','Fertilizers','Chemicals','Tools','Other'];
+  return `
+    <div class="form-row">
+      <div class="form-group"><label>Item Name *</label><input id="si-name" value="${esc(s?.name||'')}" placeholder="e.g. HDPE Pipe 20mm" /></div>
+      <div class="form-group"><label>Brand / Spec</label><input id="si-brand" value="${esc(s?.brand||'')}" placeholder="e.g. Aquaflow" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label>
+        <select id="si-cat">${cats.map(c=>`<option ${c===(s?.category||'')?'selected':''}>${c}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Unit</label>
+        <select id="si-unit"><option>pcs</option><option>m</option><option>kg</option><option>L</option><option>roll</option><option>bag</option><option>box</option></select>
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group"><label>Qty In (Opening)</label><input id="si-qin" type="number" min="0" value="${s?.qtyIn||0}" /></div>
+      <div class="form-group"><label>Qty Out (Used)</label><input id="si-qout" type="number" min="0" value="${s?.qtyOut||0}" /></div>
+      <div class="form-group"><label>Min. Stock Alert</label><input id="si-min" type="number" min="0" value="${s?.minQty||0}" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Store Location</label><input id="si-loc" value="${esc(s?.storeLoc||'')}" placeholder="e.g. Shelf A2" /></div>
+      <div class="form-group"><label>Unit Cost (AED)</label><input id="si-cost" type="number" step="0.01" value="${s?.unitCost||''}" /></div>
+    </div>`;
+}
+
+function openAddStoreItem() {
+  openModal('Add Store Item', storeItemFormHTML(null),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveStoreItem()">Save</button>`);
+}
+function openEditStoreItem(id) {
+  const d=getFarmData(currentFarm); const s=d.storeItems.find(x=>x.id===id); if(!s) return;
+  openModal('Edit Store Item', storeItemFormHTML(s),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveStoreItem('${id}')">Update</button>`);
+}
+function saveStoreItem(id) {
+  const d=getFarmData(currentFarm); d.storeItems=d.storeItems||[];
+  const name=document.getElementById('si-name').value.trim();
+  if(!name){alert('Item name required');return;}
+  const qin=parseFloat(document.getElementById('si-qin').value)||0;
+  const qout=parseFloat(document.getElementById('si-qout').value)||0;
+  const rec={
+    id:id||uid(), name, brand:document.getElementById('si-brand').value,
+    category:document.getElementById('si-cat').value,
+    unit:document.getElementById('si-unit').value,
+    qtyIn:qin, qtyOut:qout, balance:Math.max(0,qin-qout),
+    minQty:document.getElementById('si-min').value,
+    storeLoc:document.getElementById('si-loc').value,
+    unitCost:document.getElementById('si-cost').value,
+    author:currentUser,
+    createdAt:(id?d.storeItems.find(x=>x.id===id)?.createdAt:null)||new Date().toISOString(),
+  };
+  if(id){const i=d.storeItems.findIndex(x=>x.id===id);if(i>-1)d.storeItems[i]=rec;}
+  else d.storeItems.push(rec);
+  saveFarmData(currentFarm,d); closeModal(); navigate('store');
+}
+function openStockMovement(id) {
+  const d=getFarmData(currentFarm); const s=d.storeItems.find(x=>x.id===id); if(!s) return;
+  openModal(`Stock Movement — ${s.name}`, `
+    <p style="margin-bottom:14px;color:var(--gray);font-size:13px">Current balance: <strong style="font-size:16px;color:var(--green)">${s.balance} ${s.unit}</strong></p>
+    <div class="form-row">
+      <div class="form-group"><label>Movement Type</label>
+        <select id="mv-type"><option value="in">➕ Stock In (received)</option><option value="out">➖ Stock Out (used/issued)</option></select>
+      </div>
+      <div class="form-group"><label>Quantity</label><input id="mv-qty" type="number" min="0.01" step="0.01" placeholder="Enter quantity" /></div>
+    </div>
+    <div class="form-row one"><div class="form-group"><label>Reason / Reference</label>
+      <input id="mv-reason" placeholder="e.g. Issued for Job #5 / Received from supplier" />
+    </div></div>
+  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyStockMovement('${id}')">Apply</button>`);
+}
+function applyStockMovement(id) {
+  const d=getFarmData(currentFarm); const s=d.storeItems.find(x=>x.id===id); if(!s) return;
+  const type=document.getElementById('mv-type').value;
+  const qty=parseFloat(document.getElementById('mv-qty').value);
+  if(!qty||qty<=0){alert('Enter a valid quantity');return;}
+  if(type==='in'){s.qtyIn=(parseFloat(s.qtyIn)||0)+qty;}
+  else{s.qtyOut=(parseFloat(s.qtyOut)||0)+qty;}
+  s.balance=Math.max(0,(parseFloat(s.qtyIn)||0)-(parseFloat(s.qtyOut)||0));
+  saveFarmData(currentFarm,d); closeModal(); navigate('store');
+  showToast(type==='in'?`+${qty} ${s.unit} added to stock`:`-${qty} ${s.unit} removed from stock`);
+}
+function deleteStoreItem(id) {
+  if(!confirm('Delete this store item?')) return;
+  const d=getFarmData(currentFarm); d.storeItems=d.storeItems.filter(x=>x.id!==id);
+  saveFarmData(currentFarm,d); navigate('store');
 }
 
 // ====================== WEATHER ======================
