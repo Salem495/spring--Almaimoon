@@ -1679,14 +1679,15 @@ function openAssignTask(assignee) {
 
 // ====================== FARM COSTS ======================
 const COST_FIELDS = [
-  { id: 'labor',       label: 'Labor Charges',  icon: '👷', color: '#1d3557' },
-  { id: 'seeds',       label: 'Seeds',          icon: '🌱', color: '#2d6a4f' },
-  { id: 'pesticides',  label: 'Pesticides',     icon: '🧪', color: '#8b2252' },
-  { id: 'nutrition',   label: 'Nutrition / Fertilizers', icon: '🌿', color: '#6b4226' },
-  { id: 'electricity', label: 'Electricity',    icon: '⚡', color: '#f4a261' },
-  { id: 'water',       label: 'Water',          icon: '💧', color: '#457b9d' },
+  { id: 'labor',       label: 'Labor Charges',           icon: '👷', color: '#1d3557', owners: ['admin','struct_eng'] },
+  { id: 'seeds',       label: 'Seeds',                   icon: '🌱', color: '#2d6a4f', owners: ['admin','agro_eng'] },
+  { id: 'pesticides',  label: 'Pesticides',              icon: '🧪', color: '#8b2252', owners: ['admin','agro_eng'] },
+  { id: 'nutrition',   label: 'Nutrition / Fertilizers', icon: '🌿', color: '#6b4226', owners: ['admin','agro_eng','soil_eng'] },
+  { id: 'electricity', label: 'Electricity',             icon: '⚡', color: '#f4a261', owners: ['admin','mois_eng'] },
+  { id: 'water',       label: 'Water',                   icon: '💧', color: '#457b9d', owners: ['admin','mois_eng','irr_eng'] },
 ];
 
+function canEditField(f) { return f.owners.includes(currentUser); }
 function currentMonth() { return new Date().toISOString().slice(0,7); }
 function fmtMonth(m) {
   if (!m) return '—';
@@ -1694,150 +1695,204 @@ function fmtMonth(m) {
   const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return names[parseInt(mo)-1] + ' ' + y;
 }
-function costTotal(rec) {
-  return COST_FIELDS.reduce((s,f) => s + (parseFloat(rec[f.id])||0), 0);
-}
+function costVal(rec, fid, type) { return parseFloat(rec?.[type+'_'+fid])||0; }
+function costTotalType(rec, type) { return COST_FIELDS.reduce((s,f)=>s+costVal(rec,f.id,type),0); }
+function costTotal(rec) { return costTotalType(rec,'act'); } // actual is primary total
 
 function renderFarmCosts() {
   const d = getFarmData(currentFarm);
   d.costs = d.costs || [];
   const farm = FARMS[currentFarm];
-  const isMois = currentUser === 'mois_eng';
   const isAdmin = currentUser === 'admin';
-  const canEditAll = isAdmin;
-  const canEditElecWater = isMois || isAdmin;
-
-  // current month record (or latest)
   const thisMonth = currentMonth();
-  let cur = d.costs.find(c => c.month === thisMonth);
+  const cur = d.costs.find(c => c.month === thisMonth);
+  const myFields = COST_FIELDS.filter(f => canEditField(f));
+  const canEdit = myFields.length > 0;
 
   return `
   <div class="card">
     <h2>💰 Farm Running Costs — ${farm.name}
-      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddCost()">+ Add Month</button>
+      ${canEdit ? `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddCost()">+ Add Month</button>` : ''}
     </h2>
 
-    <!-- CURRENT MONTH SUMMARY -->
+    <!-- CURRENT MONTH CARD -->
     ${cur ? `
     <div style="background:linear-gradient(135deg,#f0f9f0,#e8f5e8);border-radius:12px;padding:18px 20px;margin-bottom:18px;border:2px solid #d0e8d0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <span style="font-weight:700;font-size:15px;color:var(--green)">📅 ${fmtMonth(cur.month)} — Current Month</span>
-        <div style="display:flex;gap:8px">
-          ${canEditAll||canEditElecWater ? `<button class="btn btn-secondary btn-sm" onclick="openEditCost('${cur.id}')">Edit</button>` : ''}
-        </div>
+        ${canEdit ? `<button class="btn btn-secondary btn-sm" onclick="openEditCost('${cur.id}')">✏️ Edit My Fields</button>` : ''}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
-        ${COST_FIELDS.map(f => `
-          <div style="background:#fff;border-radius:9px;padding:12px 14px;border-left:4px solid ${f.color}">
-            <div style="font-size:12px;color:var(--gray);margin-bottom:4px">${f.icon} ${f.label}</div>
-            <div style="font-size:18px;font-weight:800;color:${f.color}">${cur[f.id]?Number(cur[f.id]).toLocaleString()+' AED':'—'}</div>
-          </div>`).join('')}
-      </div>
-      <div style="background:var(--green);color:#fff;border-radius:9px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:700;font-size:14px">💰 Total Cost</span>
-        <span style="font-size:22px;font-weight:800">${costTotal(cur).toLocaleString()} AED</span>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#e8f0e8">
+            <th style="padding:8px 12px;text-align:left;color:var(--green)">Category</th>
+            <th style="padding:8px 12px;text-align:right;color:#457b9d">Estimated (AED)</th>
+            <th style="padding:8px 12px;text-align:right;color:#2d6a4f">Actual (AED)</th>
+            <th style="padding:8px 12px;text-align:right;color:${`#c07c2a`}">Variance</th>
+            <th style="padding:8px 12px;text-align:center;color:var(--gray)">Updated by</th>
+          </tr></thead>
+          <tbody>
+            ${COST_FIELDS.map(f => {
+              const est = costVal(cur, f.id, 'est');
+              const act = costVal(cur, f.id, 'act');
+              const variance = act - est;
+              const updBy = cur['updby_'+f.id] ? (USERS[cur['updby_'+f.id]]?.name || cur['updby_'+f.id]) : '—';
+              return `<tr style="border-bottom:1px solid #eef3ee">
+                <td style="padding:9px 12px"><span style="font-size:16px">${f.icon}</span> <strong style="color:${f.color}">${f.label}</strong></td>
+                <td style="padding:9px 12px;text-align:right;color:#457b9d;font-weight:600">${est ? est.toLocaleString() : '—'}</td>
+                <td style="padding:9px 12px;text-align:right;color:#2d6a4f;font-weight:700">${act ? act.toLocaleString() : '—'}</td>
+                <td style="padding:9px 12px;text-align:right;font-weight:700;color:${variance>0?'#d62828':variance<0?'#2d6a4f':'#aaa'}">
+                  ${est||act ? (variance>0?'▲ ':'variance<0?'▼ ':'')+Math.abs(variance).toLocaleString() : '—'}
+                </td>
+                <td style="padding:9px 12px;text-align:center;font-size:11px;color:var(--gray)">${updBy}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background:#f0f7f0;font-weight:800">
+              <td style="padding:10px 12px">💰 TOTAL</td>
+              <td style="padding:10px 12px;text-align:right;color:#457b9d">${costTotalType(cur,'est').toLocaleString()} AED</td>
+              <td style="padding:10px 12px;text-align:right;color:#2d6a4f">${costTotalType(cur,'act').toLocaleString()} AED</td>
+              <td style="padding:10px 12px;text-align:right;color:${costTotalType(cur,'act')-costTotalType(cur,'est')>0?'#d62828':'#2d6a4f'}">
+                ${costTotalType(cur,'act')-costTotalType(cur,'est') !== 0 ?
+                  (costTotalType(cur,'act')>costTotalType(cur,'est')?'▲ ':'▼ ')+(Math.abs(costTotalType(cur,'act')-costTotalType(cur,'est'))).toLocaleString() : '—'}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
       ${cur.notes?`<p style="margin-top:10px;font-size:12px;color:#555">📝 ${esc(cur.notes)}</p>`:''}
     </div>` : `
     <div class="alert alert-warn" style="margin-bottom:16px">No cost record for ${fmtMonth(thisMonth)} yet.
-      ${canEditAll||canEditElecWater?`<button class="btn btn-primary btn-sm" style="margin-left:12px" onclick="openAddCost()">Add Now</button>`:''}
+      ${canEdit?`<button class="btn btn-primary btn-sm" style="margin-left:12px" onclick="openAddCost()">Add Now</button>`:''}
     </div>`}
 
-    <!-- HISTORY TABLE -->
+    <!-- HISTORY -->
     <h3 style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px">📊 Monthly History</h3>
     <div class="table-wrap">
       <table>
         <thead><tr>
           <th>Month</th>
-          ${COST_FIELDS.map(f=>`<th>${f.icon} ${f.label}</th>`).join('')}
-          <th style="color:#c07c2a">💰 Total (AED)</th>
-          <th>Actions</th>
+          ${COST_FIELDS.map(f=>`<th>${f.icon} ${f.label}<br><small style="font-weight:400;color:#888">Est / Act</small></th>`).join('')}
+          <th>Est. Total</th><th>Act. Total</th><th>Actions</th>
         </tr></thead>
         <tbody>
           ${d.costs.length===0
-            ? `<tr><td colspan="${COST_FIELDS.length+3}"><div class="empty"><div class="empty-icon">💰</div>No records yet</div></td></tr>`
+            ? `<tr><td colspan="${COST_FIELDS.length+4}"><div class="empty"><div class="empty-icon">💰</div>No records yet</div></td></tr>`
             : d.costs.sort((a,b)=>b.month.localeCompare(a.month)).map(c=>`
-              <tr ${c.month===thisMonth?'style="background:#f0f9f0;font-weight:600"':''}>
-                <td>${fmtMonth(c.month)}${c.month===thisMonth?' <span class="badge badge-green">Current</span>':''}</td>
-                ${COST_FIELDS.map(f=>`<td>${c[f.id]?Number(c[f.id]).toLocaleString():''}</td>`).join('')}
-                <td style="font-weight:800;color:#c07c2a">${costTotal(c).toLocaleString()}</td>
+              <tr ${c.month===thisMonth?'style="background:#f0f9f0"':''}>
+                <td><strong>${fmtMonth(c.month)}</strong>${c.month===thisMonth?' <span class="badge badge-green">Now</span>':''}</td>
+                ${COST_FIELDS.map(f=>{
+                  const est=costVal(c,f.id,'est'), act=costVal(c,f.id,'act');
+                  return `<td style="text-align:center;font-size:12px">
+                    <span style="color:#457b9d">${est||'—'}</span>
+                    <span style="color:#ccc"> / </span>
+                    <span style="color:#2d6a4f;font-weight:600">${act||'—'}</span>
+                  </td>`;
+                }).join('')}
+                <td style="text-align:right;color:#457b9d;font-weight:600">${costTotalType(c,'est').toLocaleString()}</td>
+                <td style="text-align:right;color:#2d6a4f;font-weight:700">${costTotalType(c,'act').toLocaleString()}</td>
                 <td style="white-space:nowrap">
-                  ${canEditAll||canEditElecWater?`<button class="btn btn-secondary btn-sm" onclick="openEditCost('${c.id}')">Edit</button>`:''}
+                  ${canEdit?`<button class="btn btn-secondary btn-sm" onclick="openEditCost('${c.id}')">Edit</button>`:''}
                   ${isAdmin?`<button class="btn btn-danger btn-sm" onclick="deleteCost('${c.id}')">Del</button>`:''}
                 </td>
               </tr>`).join('')}
         </tbody>
-        ${d.costs.length>0?`
-        <tfoot>
-          <tr style="background:#f0f7f0;font-weight:700">
-            <td>TOTAL ALL</td>
-            ${COST_FIELDS.map(f=>`<td>${d.costs.reduce((s,c)=>s+(parseFloat(c[f.id])||0),0).toLocaleString()}</td>`).join('')}
-            <td style="color:#c07c2a">${d.costs.reduce((s,c)=>s+costTotal(c),0).toLocaleString()}</td>
-            <td></td>
-          </tr>
-        </tfoot>`:''}
+        ${d.costs.length>0?`<tfoot><tr style="background:#f0f7f0;font-weight:700">
+          <td>ALL TIME</td>
+          ${COST_FIELDS.map(f=>`<td style="text-align:center;font-size:12px">
+            <span style="color:#457b9d">${d.costs.reduce((s,c)=>s+costVal(c,f.id,'est'),0).toLocaleString()}</span>
+            <span style="color:#ccc"> / </span>
+            <span style="color:#2d6a4f">${d.costs.reduce((s,c)=>s+costVal(c,f.id,'act'),0).toLocaleString()}</span>
+          </td>`).join('')}
+          <td style="color:#457b9d">${d.costs.reduce((s,c)=>s+costTotalType(c,'est'),0).toLocaleString()}</td>
+          <td style="color:#2d6a4f">${d.costs.reduce((s,c)=>s+costTotalType(c,'act'),0).toLocaleString()}</td>
+          <td></td>
+        </tr></tfoot>`:''}
       </table>
     </div>
   </div>`;
 }
 
 function costFormHTML(rec) {
-  const isMois = currentUser === 'mois_eng';
-  const isAdmin = currentUser === 'admin';
+  const myFields = COST_FIELDS.filter(f => canEditField(f));
+  const readFields = COST_FIELDS.filter(f => !canEditField(f));
   return `
     <div class="form-row one"><div class="form-group">
       <label>Month *</label>
       <input id="cf-month" type="month" value="${rec?.month||currentMonth()}" ${rec?'readonly':''} />
     </div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      ${COST_FIELDS.map(f => {
-        const editable = isAdmin || (isMois && (f.id==='electricity'||f.id==='water'));
-        return `<div class="form-group" style="background:${editable?'#fff':'#f5f5f5'};padding:10px;border-radius:9px;border-left:4px solid ${f.color}">
-          <label style="color:${f.color}">${f.icon} ${f.label} (AED)</label>
-          <input id="cf-${f.id}" type="number" min="0" step="0.01"
-            value="${rec?.[f.id]||''}" placeholder="0.00"
-            ${editable?'':'readonly style="background:#f0f0f0;color:#aaa"'}
-            ${editable?`style="border-color:${f.color}44"`:''}
-          />
-          ${!editable?`<div style="font-size:10px;color:#aaa;margin-top:2px">Read-only</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
+
+    ${myFields.length ? `
+    <p style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">✏️ Your fields — enter Estimated and Actual:</p>
+    ${myFields.map(f => `
+      <div style="background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;border:2px solid ${f.color}44">
+        <div style="font-size:13px;font-weight:700;color:${f.color};margin-bottom:10px">${f.icon} ${f.label}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group">
+            <label style="color:#457b9d">📘 Estimated (AED)</label>
+            <input id="cf-est-${f.id}" type="number" min="0" step="0.01"
+              value="${rec?.['est_'+f.id]||''}" placeholder="0.00"
+              oninput="updateCostPreview()" style="border-color:#457b9d55" />
+          </div>
+          <div class="form-group">
+            <label style="color:#2d6a4f">✅ Actual (AED)</label>
+            <input id="cf-act-${f.id}" type="number" min="0" step="0.01"
+              value="${rec?.['act_'+f.id]||''}" placeholder="0.00"
+              oninput="updateCostPreview()" style="border-color:#2d6a4f55" />
+          </div>
+        </div>
+      </div>`).join('')}` : ''}
+
+    ${readFields.length ? `
+    <details style="margin-bottom:12px">
+      <summary style="font-size:12px;color:var(--gray);cursor:pointer;margin-bottom:8px">📋 Other fields (read-only — filled by other engineers)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        ${readFields.map(f=>{
+          const est = rec?.['est_'+f.id]||''; const act = rec?.['act_'+f.id]||'';
+          const updBy = rec?.['updby_'+f.id] ? (USERS[rec['updby_'+f.id]]?.name||rec['updby_'+f.id]) : '—';
+          return `<div style="background:#f5f5f5;border-radius:8px;padding:10px;border-left:3px solid ${f.color}">
+            <div style="font-size:11px;font-weight:700;color:${f.color};margin-bottom:4px">${f.icon} ${f.label}</div>
+            <div style="font-size:12px">Est: <strong>${est||'—'}</strong> &nbsp; Act: <strong>${act||'—'}</strong></div>
+            <div style="font-size:10px;color:#aaa;margin-top:2px">By: ${updBy}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </details>` : ''}
+
     <div class="form-row one"><div class="form-group">
       <label>Notes</label>
-      <textarea id="cf-notes" placeholder="Optional notes for this month...">${esc(rec?.notes||'')}</textarea>
+      <textarea id="cf-notes" placeholder="Optional notes...">${esc(rec?.notes||'')}</textarea>
     </div></div>
-    <div id="cf-total-preview" style="background:var(--green);color:#fff;border-radius:8px;padding:10px 14px;font-weight:700;text-align:center;font-size:15px">
-      💰 Total: calculating...
+    <div id="cf-total-preview" style="background:var(--green);color:#fff;border-radius:8px;padding:10px 14px;font-weight:700;font-size:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center">
+      <div>📘 Est: <span id="prev-est">0</span> AED</div>
+      <div>✅ Act: <span id="prev-act">0</span> AED</div>
     </div>`;
 }
 
 function updateCostPreview() {
-  const total = COST_FIELDS.reduce((s,f) => s+(parseFloat(document.getElementById('cf-'+f.id)?.value)||0),0);
-  const el = document.getElementById('cf-total-preview');
-  if (el) el.textContent = '💰 Total: ' + total.toLocaleString() + ' AED';
+  const myFields = COST_FIELDS.filter(f => canEditField(f));
+  const est = myFields.reduce((s,f)=>s+(parseFloat(document.getElementById('cf-est-'+f.id)?.value)||0),0);
+  const act = myFields.reduce((s,f)=>s+(parseFloat(document.getElementById('cf-act-'+f.id)?.value)||0),0);
+  const pe = document.getElementById('prev-est'), pa = document.getElementById('prev-act');
+  if (pe) pe.textContent = est.toLocaleString();
+  if (pa) pa.textContent = act.toLocaleString();
 }
 
 function openAddCost() {
   openModal('Add Monthly Costs — ' + FARMS[currentFarm].name, costFormHTML(null),
     `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
      <button class="btn btn-primary" onclick="saveCost()">Save</button>`);
-  setTimeout(() => COST_FIELDS.forEach(f => {
-    const el = document.getElementById('cf-'+f.id);
-    if (el) el.addEventListener('input', updateCostPreview);
-  }), 100);
 }
 
 function openEditCost(id) {
   const d = getFarmData(currentFarm);
   const rec = d.costs.find(x=>x.id===id); if(!rec) return;
-  openModal('Edit Costs — ' + fmtMonth(rec.month), costFormHTML(rec),
+  openModal('Edit Costs — ' + fmtMonth(rec.month) + ' — ' + FARMS[currentFarm].name, costFormHTML(rec),
     `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
      <button class="btn btn-primary" onclick="saveCost('${id}')">Update</button>`);
-  setTimeout(() => { updateCostPreview(); COST_FIELDS.forEach(f => {
-    const el = document.getElementById('cf-'+f.id);
-    if (el) el.addEventListener('input', updateCostPreview);
-  }); }, 100);
+  setTimeout(updateCostPreview, 80);
 }
 
 function saveCost(id) {
@@ -1845,18 +1900,22 @@ function saveCost(id) {
   d.costs = d.costs || [];
   const month = document.getElementById('cf-month').value;
   if (!month) { alert('Month is required'); return; }
-  // prevent duplicate month (only for new records)
   if (!id && d.costs.find(c=>c.month===month)) {
-    alert('A record for ' + fmtMonth(month) + ' already exists. Edit the existing one.');
-    return;
+    // Month exists — edit it instead
+    id = d.costs.find(c=>c.month===month).id;
   }
-  const rec = { id: id||uid(), month };
-  COST_FIELDS.forEach(f => { rec[f.id] = document.getElementById('cf-'+f.id)?.value || ''; });
-  rec.notes = document.getElementById('cf-notes').value;
-  rec.updatedBy = currentUser;
+  let rec = id ? { ...d.costs.find(x=>x.id===id) } : { id: uid(), month, createdAt: new Date().toISOString() };
+  if (!rec.id) rec = { id: uid(), month, createdAt: new Date().toISOString() };
+  // only overwrite fields this user owns
+  COST_FIELDS.filter(f=>canEditField(f)).forEach(f => {
+    rec['est_'+f.id] = document.getElementById('cf-est-'+f.id)?.value || '';
+    rec['act_'+f.id] = document.getElementById('cf-act-'+f.id)?.value || '';
+    rec['updby_'+f.id] = currentUser;
+  });
+  const notesEl = document.getElementById('cf-notes');
+  if (notesEl) rec.notes = notesEl.value;
   rec.updatedAt = new Date().toISOString();
-  if (!id) rec.createdAt = new Date().toISOString();
-  if (id) { const i=d.costs.findIndex(x=>x.id===id); if(i>-1) d.costs[i]=rec; }
+  if (id) { const i=d.costs.findIndex(x=>x.id===id); if(i>-1) d.costs[i]=rec; else d.costs.push(rec); }
   else d.costs.push(rec);
   saveFarmData(currentFarm, d);
   closeModal(); navigate('farm-costs');
@@ -1871,43 +1930,59 @@ function deleteCost(id) {
 }
 
 function renderAllFarmsCostSummary() {
-  const months = [];
   const rows = Object.keys(FARMS).map(fid => {
     const d = getFarmData(fid);
     const fm = FARMS[fid];
-    const latest = (d.costs||[]).sort((a,b)=>b.month.localeCompare(a.month))[0];
-    const allTime = (d.costs||[]).reduce((s,c)=>s+costTotal(c),0);
-    return { farm: fm, latest, allTime, costs: d.costs||[] };
+    const thisM = currentMonth();
+    const cur = (d.costs||[]).find(c=>c.month===thisM);
+    const allTimeAct = (d.costs||[]).reduce((s,c)=>s+costTotalType(c,'act'),0);
+    const allTimeEst = (d.costs||[]).reduce((s,c)=>s+costTotalType(c,'est'),0);
+    return { fid, farm: fm, cur, allTimeAct, allTimeEst };
   });
-
-  const grandTotal = rows.reduce((s,r)=>s+r.allTime,0);
-  const thisM = currentMonth();
+  const grandAct = rows.reduce((s,r)=>s+r.allTimeAct,0);
+  const grandEst = rows.reduce((s,r)=>s+r.allTimeEst,0);
 
   return `
   <div class="card" style="margin-top:18px">
-    <h2>💰 All Farms — Cost Summary
-      <span style="font-size:11px;font-weight:400;color:var(--gray);margin-left:8px">Click 💰 Farm Costs tab for details</span>
+    <h2>💰 All Farms — Cost Overview
+      <span style="font-size:11px;font-weight:400;color:var(--gray);margin-left:8px">current month · click farm to open details</span>
     </h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:16px">
       ${rows.map(r => {
-        const thisMonthRec = r.costs.find(c=>c.month===thisM);
-        const thisMonthTotal = thisMonthRec ? costTotal(thisMonthRec) : 0;
+        const est = r.cur ? costTotalType(r.cur,'est') : 0;
+        const act = r.cur ? costTotalType(r.cur,'act') : 0;
         return `
-        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:4px solid ${r.farm.color};text-align:center;cursor:pointer"
-             onclick="switchFarm('${Object.keys(FARMS).find(k=>FARMS[k]===r.farm)}');navigate('farm-costs')">
-          <div style="font-size:22px">${r.farm.icon}</div>
-          <div style="font-weight:700;font-size:13px;margin:4px 0">${r.farm.name}</div>
-          <div style="font-size:11px;color:var(--gray);margin-bottom:6px">This month</div>
-          <div style="font-size:18px;font-weight:800;color:${r.farm.color}">${thisMonthTotal?thisMonthTotal.toLocaleString()+' AED':'—'}</div>
-          <div style="font-size:10px;color:var(--gray);margin-top:4px">All time: ${r.allTime?r.allTime.toLocaleString()+' AED':'—'}</div>
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:4px solid ${r.farm.color};cursor:pointer"
+             onclick="switchFarm('${r.fid}');navigate('farm-costs')">
+          <div style="font-size:20px;text-align:center">${r.farm.icon}</div>
+          <div style="font-weight:700;font-size:12px;text-align:center;margin:4px 0">${r.farm.name}</div>
+          <div style="font-size:11px;color:var(--gray);text-align:center;margin-bottom:8px">${fmtMonth(currentMonth())}</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span style="color:#457b9d">📘 Est</span>
+            <strong style="color:#457b9d">${est?est.toLocaleString()+' AED':'—'}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:#2d6a4f">✅ Act</span>
+            <strong style="color:#2d6a4f">${act?act.toLocaleString()+' AED':'—'}</strong>
+          </div>
+          ${est&&act?`<div style="margin-top:6px;font-size:10px;text-align:center;color:${act>est?'#d62828':'#2d6a4f'}">
+            ${act>est?'▲ Over':'▼ Under'} by ${Math.abs(act-est).toLocaleString()} AED
+          </div>`:''}
         </div>`;
       }).join('')}
     </div>
-    <div style="background:linear-gradient(90deg,#2d6a4f,#40916c);color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-weight:700;font-size:14px">🌾 Grand Total — All Farms (All Time)</span>
-      <span style="font-size:24px;font-weight:800">${grandTotal.toLocaleString()} AED</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:linear-gradient(90deg,#1d3557,#457b9d);color:#fff;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:700">📘 Grand Est. (All Time)</span>
+        <span style="font-size:20px;font-weight:800">${grandEst.toLocaleString()} AED</span>
+      </div>
+      <div style="background:linear-gradient(90deg,#2d6a4f,#40916c);color:#fff;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:700">✅ Grand Actual (All Time)</span>
+        <span style="font-size:20px;font-weight:800">${grandAct.toLocaleString()} AED</span>
+      </div>
     </div>
   </div>`;
+}
 }
 
 // ====================== SOIL TESTS (soil_eng) ======================
