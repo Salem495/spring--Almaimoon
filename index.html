@@ -339,6 +339,7 @@
       <option value="agro_eng">Agricultural Engineer</option>
       <option value="soil_eng">Soil Engineer</option>
       <option value="irr_eng">Irrigation Engineer</option>
+      <option value="mois_eng">Mois (Electrical Engineer)</option>
     </select>
     <input type="password" id="login-pass" placeholder="Password" />
     <button onclick="doLogin()">Login</button>
@@ -395,6 +396,7 @@ const USERS = {
   agro_eng:   { name: 'Agricultural Engineer', role: 'Agro. Eng.',   password: 'eng123',   color: '#6b4226' },
   soil_eng:   { name: 'Soil Engineer',         role: 'Soil Eng.',    password: 'eng123',   color: '#e07b39' },
   irr_eng:    { name: 'Irrigation Engineer',   role: 'Irr. Eng.',    password: 'eng123',   color: '#457b9d' },
+  mois_eng:   { name: 'Mois',                  role: 'Electrical Eng.', password: 'eng123', color: '#f4a261' },
 };
 
 const FARMS = {
@@ -472,6 +474,7 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 // ====================== APP INIT ======================
 const NAV_ADMIN = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'tasks',        label: '✅ Tasks' },
   { id: 'reports',      label: '📋 Reports' },
@@ -487,6 +490,7 @@ const NAV_ADMIN = [
 ];
 const NAV_ENG = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
   { id: 'reports',      label: '📋 Reports' },
@@ -496,6 +500,7 @@ const NAV_ENG = [
 ];
 const NAV_SOIL = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
   { id: 'soil-tests',   label: '🧪 Soil Tests' },
@@ -506,6 +511,7 @@ const NAV_SOIL = [
 ];
 const NAV_AGRO = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
   { id: 'plant-health', label: '🌿 Plant Health' },
@@ -516,6 +522,7 @@ const NAV_AGRO = [
 ];
 const NAV_IRR = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
   { id: 'irr-repairs',  label: '🔧 Repairs' },
@@ -526,6 +533,11 @@ const NAV_IRR = [
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
 ];
+const NAV_MOIS = [
+  { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '⚡ Electricity & Water' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+];
 
 function initApp() {
   document.getElementById('header-name').textContent = USERS[currentUser].name;
@@ -535,10 +547,11 @@ function initApp() {
 }
 
 function buildNav() {
-  const items = currentUser === 'admin' ? NAV_ADMIN
+  const items = currentUser === 'admin'    ? NAV_ADMIN
               : currentUser === 'soil_eng' ? NAV_SOIL
               : currentUser === 'agro_eng' ? NAV_AGRO
               : currentUser === 'irr_eng'  ? NAV_IRR
+              : currentUser === 'mois_eng' ? NAV_MOIS
               : NAV_ENG;
   document.getElementById('main-nav').innerHTML = items.map(n =>
     `<button onclick="navigate('${n.id}')" id="nav-${n.id}">${n.label}</button>`
@@ -562,7 +575,7 @@ function navigate(page) {
   if (btn) btn.classList.add('active');
   const main = document.getElementById('main-content');
   const isAdmin = currentUser === 'admin';
-  if (page === 'dashboard')     main.innerHTML = isAdmin ? renderAdminDashboard() : renderEngDashboard();
+  if (page === 'dashboard')     main.innerHTML = isAdmin ? renderAdminDashboard() : currentUser==='mois_eng' ? renderMoisDashboard() : renderEngDashboard();
   else if (page === 'farm-profile') main.innerHTML = renderFarmProfile();
   else if (page === 'tasks' || page === 'my-tasks') main.innerHTML = renderTasks(isAdmin ? null : currentUser);
   else if (page === 'reports')  main.innerHTML = renderReports(isAdmin ? null : currentUser);
@@ -575,9 +588,49 @@ function navigate(page) {
   else if (page === 'irr-repairs')  main.innerHTML = renderIrrRepairs();
   else if (page === 'irr-jobs')     main.innerHTML = renderIrrJobs();
   else if (page === 'store')        main.innerHTML = renderStore();
+  else if (page === 'farm-costs')   main.innerHTML = renderFarmCosts();
 }
 
 // ====================== FARM PROFILE (PHOTOS) ======================
+function renderMoisDashboard() {
+  const allRows = Object.keys(FARMS).map(fid => {
+    const d = getFarmData(fid);
+    const fm = FARMS[fid];
+    const thisM = currentMonth();
+    const rec = (d.costs||[]).find(c=>c.month===thisM);
+    const myTasks = (d.tasks||[]).filter(t=>t.assignee==='mois_eng'&&t.status!=='Done');
+    return { fid, farm: fm, rec, myTasks };
+  });
+  const totalElec = allRows.reduce((s,r)=>s+(parseFloat(r.rec?.electricity)||0),0);
+  const totalWater = allRows.reduce((s,r)=>s+(parseFloat(r.rec?.water)||0),0);
+  return `
+  <div class="stats-grid">
+    <div class="stat-card orange"><div class="icon">⚡</div><div class="label">Electricity This Month</div><div class="value">${totalElec?totalElec.toLocaleString()+' AED':'—'}</div></div>
+    <div class="stat-card blue"><div class="icon">💧</div><div class="label">Water This Month</div><div class="value">${totalWater?totalWater.toLocaleString()+' AED':'—'}</div></div>
+    <div class="stat-card green"><div class="icon">✅</div><div class="label">My Open Tasks</div><div class="value">${allRows.reduce((s,r)=>s+r.myTasks.length,0)}</div></div>
+  </div>
+  <div class="card">
+    <h2>⚡ Electricity & Water — All Farms (${fmtMonth(currentMonth())})</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+      ${allRows.map(r=>`
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:4px solid ${r.farm.color}">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px">${r.farm.icon} ${r.farm.name}</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--gray)">⚡ Electricity</span>
+            <span style="font-weight:700;color:#f4a261">${r.rec?.electricity?Number(r.rec.electricity).toLocaleString()+' AED':'—'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;color:var(--gray)">💧 Water</span>
+            <span style="font-weight:700;color:#457b9d">${r.rec?.water?Number(r.rec.water).toLocaleString()+' AED':'—'}</span>
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:100%" onclick="switchFarm('${r.fid}');navigate('farm-costs')">
+            ${r.rec?'Edit Costs':'Add Costs'}
+          </button>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderFarmProfile() {
   const d = getFarmData(currentFarm);
   const farm = FARMS[currentFarm];
@@ -923,6 +976,7 @@ function renderAdminDashboard() {
       </ul>
     </div>
   </div>
+  ${renderAllFarmsCostSummary()}
   ${renderNutritionTable()}`;
 }
 
@@ -1621,6 +1675,239 @@ function openAssignTask(assignee) {
     `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
      <button class="btn btn-primary" onclick="saveTask()">Assign</button>`);
   document.getElementById('t-assignee').value = assignee;
+}
+
+// ====================== FARM COSTS ======================
+const COST_FIELDS = [
+  { id: 'labor',       label: 'Labor Charges',  icon: '👷', color: '#1d3557' },
+  { id: 'seeds',       label: 'Seeds',          icon: '🌱', color: '#2d6a4f' },
+  { id: 'pesticides',  label: 'Pesticides',     icon: '🧪', color: '#8b2252' },
+  { id: 'nutrition',   label: 'Nutrition / Fertilizers', icon: '🌿', color: '#6b4226' },
+  { id: 'electricity', label: 'Electricity',    icon: '⚡', color: '#f4a261' },
+  { id: 'water',       label: 'Water',          icon: '💧', color: '#457b9d' },
+];
+
+function currentMonth() { return new Date().toISOString().slice(0,7); }
+function fmtMonth(m) {
+  if (!m) return '—';
+  const [y,mo] = m.split('-');
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[parseInt(mo)-1] + ' ' + y;
+}
+function costTotal(rec) {
+  return COST_FIELDS.reduce((s,f) => s + (parseFloat(rec[f.id])||0), 0);
+}
+
+function renderFarmCosts() {
+  const d = getFarmData(currentFarm);
+  d.costs = d.costs || [];
+  const farm = FARMS[currentFarm];
+  const isMois = currentUser === 'mois_eng';
+  const isAdmin = currentUser === 'admin';
+  const canEditAll = isAdmin;
+  const canEditElecWater = isMois || isAdmin;
+
+  // current month record (or latest)
+  const thisMonth = currentMonth();
+  let cur = d.costs.find(c => c.month === thisMonth);
+
+  return `
+  <div class="card">
+    <h2>💰 Farm Running Costs — ${farm.name}
+      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddCost()">+ Add Month</button>
+    </h2>
+
+    <!-- CURRENT MONTH SUMMARY -->
+    ${cur ? `
+    <div style="background:linear-gradient(135deg,#f0f9f0,#e8f5e8);border-radius:12px;padding:18px 20px;margin-bottom:18px;border:2px solid #d0e8d0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <span style="font-weight:700;font-size:15px;color:var(--green)">📅 ${fmtMonth(cur.month)} — Current Month</span>
+        <div style="display:flex;gap:8px">
+          ${canEditAll||canEditElecWater ? `<button class="btn btn-secondary btn-sm" onclick="openEditCost('${cur.id}')">Edit</button>` : ''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+        ${COST_FIELDS.map(f => `
+          <div style="background:#fff;border-radius:9px;padding:12px 14px;border-left:4px solid ${f.color}">
+            <div style="font-size:12px;color:var(--gray);margin-bottom:4px">${f.icon} ${f.label}</div>
+            <div style="font-size:18px;font-weight:800;color:${f.color}">${cur[f.id]?Number(cur[f.id]).toLocaleString()+' AED':'—'}</div>
+          </div>`).join('')}
+      </div>
+      <div style="background:var(--green);color:#fff;border-radius:9px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700;font-size:14px">💰 Total Cost</span>
+        <span style="font-size:22px;font-weight:800">${costTotal(cur).toLocaleString()} AED</span>
+      </div>
+      ${cur.notes?`<p style="margin-top:10px;font-size:12px;color:#555">📝 ${esc(cur.notes)}</p>`:''}
+    </div>` : `
+    <div class="alert alert-warn" style="margin-bottom:16px">No cost record for ${fmtMonth(thisMonth)} yet.
+      ${canEditAll||canEditElecWater?`<button class="btn btn-primary btn-sm" style="margin-left:12px" onclick="openAddCost()">Add Now</button>`:''}
+    </div>`}
+
+    <!-- HISTORY TABLE -->
+    <h3 style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px">📊 Monthly History</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Month</th>
+          ${COST_FIELDS.map(f=>`<th>${f.icon} ${f.label}</th>`).join('')}
+          <th style="color:#c07c2a">💰 Total (AED)</th>
+          <th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${d.costs.length===0
+            ? `<tr><td colspan="${COST_FIELDS.length+3}"><div class="empty"><div class="empty-icon">💰</div>No records yet</div></td></tr>`
+            : d.costs.sort((a,b)=>b.month.localeCompare(a.month)).map(c=>`
+              <tr ${c.month===thisMonth?'style="background:#f0f9f0;font-weight:600"':''}>
+                <td>${fmtMonth(c.month)}${c.month===thisMonth?' <span class="badge badge-green">Current</span>':''}</td>
+                ${COST_FIELDS.map(f=>`<td>${c[f.id]?Number(c[f.id]).toLocaleString():''}</td>`).join('')}
+                <td style="font-weight:800;color:#c07c2a">${costTotal(c).toLocaleString()}</td>
+                <td style="white-space:nowrap">
+                  ${canEditAll||canEditElecWater?`<button class="btn btn-secondary btn-sm" onclick="openEditCost('${c.id}')">Edit</button>`:''}
+                  ${isAdmin?`<button class="btn btn-danger btn-sm" onclick="deleteCost('${c.id}')">Del</button>`:''}
+                </td>
+              </tr>`).join('')}
+        </tbody>
+        ${d.costs.length>0?`
+        <tfoot>
+          <tr style="background:#f0f7f0;font-weight:700">
+            <td>TOTAL ALL</td>
+            ${COST_FIELDS.map(f=>`<td>${d.costs.reduce((s,c)=>s+(parseFloat(c[f.id])||0),0).toLocaleString()}</td>`).join('')}
+            <td style="color:#c07c2a">${d.costs.reduce((s,c)=>s+costTotal(c),0).toLocaleString()}</td>
+            <td></td>
+          </tr>
+        </tfoot>`:''}
+      </table>
+    </div>
+  </div>`;
+}
+
+function costFormHTML(rec) {
+  const isMois = currentUser === 'mois_eng';
+  const isAdmin = currentUser === 'admin';
+  return `
+    <div class="form-row one"><div class="form-group">
+      <label>Month *</label>
+      <input id="cf-month" type="month" value="${rec?.month||currentMonth()}" ${rec?'readonly':''} />
+    </div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      ${COST_FIELDS.map(f => {
+        const editable = isAdmin || (isMois && (f.id==='electricity'||f.id==='water'));
+        return `<div class="form-group" style="background:${editable?'#fff':'#f5f5f5'};padding:10px;border-radius:9px;border-left:4px solid ${f.color}">
+          <label style="color:${f.color}">${f.icon} ${f.label} (AED)</label>
+          <input id="cf-${f.id}" type="number" min="0" step="0.01"
+            value="${rec?.[f.id]||''}" placeholder="0.00"
+            ${editable?'':'readonly style="background:#f0f0f0;color:#aaa"'}
+            ${editable?`style="border-color:${f.color}44"`:''}
+          />
+          ${!editable?`<div style="font-size:10px;color:#aaa;margin-top:2px">Read-only</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="form-row one"><div class="form-group">
+      <label>Notes</label>
+      <textarea id="cf-notes" placeholder="Optional notes for this month...">${esc(rec?.notes||'')}</textarea>
+    </div></div>
+    <div id="cf-total-preview" style="background:var(--green);color:#fff;border-radius:8px;padding:10px 14px;font-weight:700;text-align:center;font-size:15px">
+      💰 Total: calculating...
+    </div>`;
+}
+
+function updateCostPreview() {
+  const total = COST_FIELDS.reduce((s,f) => s+(parseFloat(document.getElementById('cf-'+f.id)?.value)||0),0);
+  const el = document.getElementById('cf-total-preview');
+  if (el) el.textContent = '💰 Total: ' + total.toLocaleString() + ' AED';
+}
+
+function openAddCost() {
+  openModal('Add Monthly Costs — ' + FARMS[currentFarm].name, costFormHTML(null),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveCost()">Save</button>`);
+  setTimeout(() => COST_FIELDS.forEach(f => {
+    const el = document.getElementById('cf-'+f.id);
+    if (el) el.addEventListener('input', updateCostPreview);
+  }), 100);
+}
+
+function openEditCost(id) {
+  const d = getFarmData(currentFarm);
+  const rec = d.costs.find(x=>x.id===id); if(!rec) return;
+  openModal('Edit Costs — ' + fmtMonth(rec.month), costFormHTML(rec),
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveCost('${id}')">Update</button>`);
+  setTimeout(() => { updateCostPreview(); COST_FIELDS.forEach(f => {
+    const el = document.getElementById('cf-'+f.id);
+    if (el) el.addEventListener('input', updateCostPreview);
+  }); }, 100);
+}
+
+function saveCost(id) {
+  const d = getFarmData(currentFarm);
+  d.costs = d.costs || [];
+  const month = document.getElementById('cf-month').value;
+  if (!month) { alert('Month is required'); return; }
+  // prevent duplicate month (only for new records)
+  if (!id && d.costs.find(c=>c.month===month)) {
+    alert('A record for ' + fmtMonth(month) + ' already exists. Edit the existing one.');
+    return;
+  }
+  const rec = { id: id||uid(), month };
+  COST_FIELDS.forEach(f => { rec[f.id] = document.getElementById('cf-'+f.id)?.value || ''; });
+  rec.notes = document.getElementById('cf-notes').value;
+  rec.updatedBy = currentUser;
+  rec.updatedAt = new Date().toISOString();
+  if (!id) rec.createdAt = new Date().toISOString();
+  if (id) { const i=d.costs.findIndex(x=>x.id===id); if(i>-1) d.costs[i]=rec; }
+  else d.costs.push(rec);
+  saveFarmData(currentFarm, d);
+  closeModal(); navigate('farm-costs');
+  showToast('✅ Cost record saved for ' + fmtMonth(month));
+}
+
+function deleteCost(id) {
+  if (!confirm('Delete this cost record?')) return;
+  const d = getFarmData(currentFarm);
+  d.costs = d.costs.filter(x=>x.id!==id);
+  saveFarmData(currentFarm, d); navigate('farm-costs');
+}
+
+function renderAllFarmsCostSummary() {
+  const months = [];
+  const rows = Object.keys(FARMS).map(fid => {
+    const d = getFarmData(fid);
+    const fm = FARMS[fid];
+    const latest = (d.costs||[]).sort((a,b)=>b.month.localeCompare(a.month))[0];
+    const allTime = (d.costs||[]).reduce((s,c)=>s+costTotal(c),0);
+    return { farm: fm, latest, allTime, costs: d.costs||[] };
+  });
+
+  const grandTotal = rows.reduce((s,r)=>s+r.allTime,0);
+  const thisM = currentMonth();
+
+  return `
+  <div class="card" style="margin-top:18px">
+    <h2>💰 All Farms — Cost Summary
+      <span style="font-size:11px;font-weight:400;color:var(--gray);margin-left:8px">Click 💰 Farm Costs tab for details</span>
+    </h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+      ${rows.map(r => {
+        const thisMonthRec = r.costs.find(c=>c.month===thisM);
+        const thisMonthTotal = thisMonthRec ? costTotal(thisMonthRec) : 0;
+        return `
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);border-top:4px solid ${r.farm.color};text-align:center;cursor:pointer"
+             onclick="switchFarm('${Object.keys(FARMS).find(k=>FARMS[k]===r.farm)}');navigate('farm-costs')">
+          <div style="font-size:22px">${r.farm.icon}</div>
+          <div style="font-weight:700;font-size:13px;margin:4px 0">${r.farm.name}</div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px">This month</div>
+          <div style="font-size:18px;font-weight:800;color:${r.farm.color}">${thisMonthTotal?thisMonthTotal.toLocaleString()+' AED':'—'}</div>
+          <div style="font-size:10px;color:var(--gray);margin-top:4px">All time: ${r.allTime?r.allTime.toLocaleString()+' AED':'—'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="background:linear-gradient(90deg,#2d6a4f,#40916c);color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;font-size:14px">🌾 Grand Total — All Farms (All Time)</span>
+      <span style="font-size:24px;font-weight:800">${grandTotal.toLocaleString()} AED</span>
+    </div>
+  </div>`;
 }
 
 // ====================== SOIL TESTS (soil_eng) ======================
