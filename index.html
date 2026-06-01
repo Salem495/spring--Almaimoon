@@ -173,6 +173,7 @@
   .stat-card.green .value { color: var(--green); }
   .stat-card.orange .value { color: var(--orange); }
   .stat-card.blue .value { color: var(--sky); }
+  .stat-card.purple .value { color: #7b2d8b; }
   .stat-card.red .value { color: var(--red); }
 
   .card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
@@ -340,11 +341,12 @@
       <option value="soil_eng">Soil Engineer</option>
       <option value="irr_eng">Irrigation Engineer</option>
       <option value="mois_eng">Mois (Electrical Engineer)</option>
+      <option value="chetak">Chetak (Accountant)</option>
     </select>
     <input type="password" id="login-pass" placeholder="Password" />
     <button onclick="doLogin()">Login</button>
     <div class="login-error" id="login-error"></div>
-    <p style="margin-top:16px;font-size:11px;color:#aaa;">Admin: admin123 &nbsp;|&nbsp; Engineers: eng123</p>
+    <p style="margin-top:16px;font-size:11px;color:#aaa;">Admin: admin123 &nbsp;|&nbsp; Engineers: eng123 &nbsp;|&nbsp; Accountant: acc123</p>
   </div>
 </div>
 
@@ -397,6 +399,7 @@ const USERS = {
   soil_eng:   { name: 'Soil Engineer',         role: 'Soil Eng.',    password: 'eng123',   color: '#e07b39' },
   irr_eng:    { name: 'Irrigation Engineer',   role: 'Irr. Eng.',    password: 'eng123',   color: '#457b9d' },
   mois_eng:   { name: 'Mois',                  role: 'Electrical Eng.', password: 'eng123', color: '#f4a261' },
+  chetak:     { name: 'Chetak',               role: 'Accountant',      password: 'acc123',  color: '#7b2d8b' },
 };
 
 const FARMS = {
@@ -538,6 +541,11 @@ const NAV_MOIS = [
   { id: 'farm-costs',   label: '⚡ Electricity & Water' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
 ];
+const NAV_CHETAK = [
+  { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'farm-costs',   label: '💰 All Costs' },
+  { id: 'my-tasks',     label: '✅ My Tasks' },
+];
 
 function initApp() {
   document.getElementById('header-name').textContent = USERS[currentUser].name;
@@ -552,6 +560,7 @@ function buildNav() {
               : currentUser === 'agro_eng' ? NAV_AGRO
               : currentUser === 'irr_eng'  ? NAV_IRR
               : currentUser === 'mois_eng' ? NAV_MOIS
+              : currentUser === 'chetak'   ? NAV_CHETAK
               : NAV_ENG;
   document.getElementById('main-nav').innerHTML = items.map(n =>
     `<button onclick="navigate('${n.id}')" id="nav-${n.id}">${n.label}</button>`
@@ -575,7 +584,7 @@ function navigate(page) {
   if (btn) btn.classList.add('active');
   const main = document.getElementById('main-content');
   const isAdmin = currentUser === 'admin';
-  if (page === 'dashboard')     main.innerHTML = isAdmin ? renderAdminDashboard() : currentUser==='mois_eng' ? renderMoisDashboard() : renderEngDashboard();
+  if (page === 'dashboard')     main.innerHTML = isAdmin ? renderAdminDashboard() : currentUser==='mois_eng' ? renderMoisDashboard() : currentUser==='chetak' ? renderChetakDashboard() : renderEngDashboard();
   else if (page === 'farm-profile') main.innerHTML = renderFarmProfile();
   else if (page === 'tasks' || page === 'my-tasks') main.innerHTML = renderTasks(isAdmin ? null : currentUser);
   else if (page === 'reports')  main.innerHTML = renderReports(isAdmin ? null : currentUser);
@@ -978,6 +987,75 @@ function renderAdminDashboard() {
   </div>
   ${renderAllFarmsCostSummary()}
   ${renderNutritionTable()}`;
+}
+
+// ====================== DASHBOARD: ACCOUNTANT (Chetak) ======================
+function renderChetakDashboard() {
+  const rows = Object.keys(FARMS).map(fid => {
+    const d = getFarmData(fid);
+    const fm = FARMS[fid];
+    const thisM = currentMonth();
+    const cur = (d.costs||[]).find(c=>c.month===thisM);
+    const allTimeEst = (d.costs||[]).reduce((s,c)=>s+costTotalType(c,'est'),0);
+    const allTimeAct = (d.costs||[]).reduce((s,c)=>s+costTotalType(c,'act'),0);
+    const estM = cur ? costTotalType(cur,'est') : 0;
+    const actM = cur ? costTotalType(cur,'act') : 0;
+    return { fid, farm: fm, estM, actM, allTimeEst, allTimeAct };
+  });
+  const grandEstM  = rows.reduce((s,r)=>s+r.estM,0);
+  const grandActM  = rows.reduce((s,r)=>s+r.actM,0);
+  const grandEstAT = rows.reduce((s,r)=>s+r.allTimeEst,0);
+  const grandActAT = rows.reduce((s,r)=>s+r.allTimeAct,0);
+  return `
+  <div class="stats-grid">
+    <div class="stat-card blue"><div class="icon">📘</div><div class="label">Est. This Month (All Farms)</div><div class="value">${grandEstM?grandEstM.toLocaleString()+' AED':'—'}</div></div>
+    <div class="stat-card green"><div class="icon">✅</div><div class="label">Actual This Month (All Farms)</div><div class="value">${grandActM?grandActM.toLocaleString()+' AED':'—'}</div></div>
+    <div class="stat-card purple"><div class="icon">📘</div><div class="label">Est. All Time (All Farms)</div><div class="value">${grandEstAT?grandEstAT.toLocaleString()+' AED':'—'}</div></div>
+    <div class="stat-card orange"><div class="icon">💰</div><div class="label">Actual All Time (All Farms)</div><div class="value">${grandActAT?grandActAT.toLocaleString()+' AED':'—'}</div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h2>📊 Farm-by-Farm Cost Summary — ${fmtMonth(currentMonth())}</h2>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#f8f9fa">
+            <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e9ecef">Farm</th>
+            <th style="padding:10px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#457b9d">📘 Est (Month)</th>
+            <th style="padding:10px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#2d6a4f">✅ Act (Month)</th>
+            <th style="padding:10px 12px;text-align:right;border-bottom:2px solid #e9ecef">Variance</th>
+            <th style="padding:10px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#457b9d">📘 Est (All Time)</th>
+            <th style="padding:10px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#2d6a4f">✅ Act (All Time)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r=>{
+            const v = r.actM - r.estM;
+            return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="switchFarm('${r.fid}');navigate('farm-costs')" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+              <td style="padding:10px 12px;font-weight:600">${r.farm.icon} ${r.farm.name}</td>
+              <td style="padding:10px 12px;text-align:right;color:#457b9d">${r.estM?r.estM.toLocaleString()+' AED':'—'}</td>
+              <td style="padding:10px 12px;text-align:right;color:#2d6a4f">${r.actM?r.actM.toLocaleString()+' AED':'—'}</td>
+              <td style="padding:10px 12px;text-align:right;font-weight:700;color:${v>0?'#d62828':v<0?'#2d6a4f':'#aaa'}">
+                ${r.estM||r.actM ? (v>0?'▲ ':(v<0?'▼ ':''))+Math.abs(v).toLocaleString()+' AED' : '—'}
+              </td>
+              <td style="padding:10px 12px;text-align:right;color:#457b9d">${r.allTimeEst?r.allTimeEst.toLocaleString()+' AED':'—'}</td>
+              <td style="padding:10px 12px;text-align:right;color:#2d6a4f">${r.allTimeAct?r.allTimeAct.toLocaleString()+' AED':'—'}</td>
+            </tr>`;
+          }).join('')}
+          <tr style="background:#f0f4f0;font-weight:700;border-top:2px solid #dee2e6">
+            <td style="padding:10px 12px">Total</td>
+            <td style="padding:10px 12px;text-align:right;color:#457b9d">${grandEstM.toLocaleString()} AED</td>
+            <td style="padding:10px 12px;text-align:right;color:#2d6a4f">${grandActM.toLocaleString()} AED</td>
+            <td style="padding:10px 12px;text-align:right;color:${grandActM>grandEstM?'#d62828':grandActM<grandEstM?'#2d6a4f':'#aaa'}">
+              ${grandEstM||grandActM?(grandActM-grandEstM>0?'▲ ':'▼ ')+Math.abs(grandActM-grandEstM).toLocaleString()+' AED':'—'}
+            </td>
+            <td style="padding:10px 12px;text-align:right;color:#457b9d">${grandEstAT.toLocaleString()} AED</td>
+            <td style="padding:10px 12px;text-align:right;color:#2d6a4f">${grandActAT.toLocaleString()} AED</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--gray);margin-top:10px">Click any row to open that farm's cost details</p>
+  </div>`;
 }
 
 // ====================== DASHBOARD: ENGINEER ======================
