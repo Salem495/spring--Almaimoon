@@ -390,7 +390,40 @@
   <img id="lightbox-img" src="" alt="" />
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
+// ====================== FIREBASE ======================
+const firebaseConfig = {
+  apiKey: "AIzaSyB98c_l-goNvGCG2Dobl42ZrSvhkt-cGMI",
+  authDomain: "farm-followup.firebaseapp.com",
+  databaseURL: "https://farm-followup-default-rtdb.firebaseio.com",
+  projectId: "farm-followup",
+  storageBucket: "farm-followup.firebasestorage.app",
+  messagingSenderId: "579853148504",
+  appId: "1:579853148504:web:76306d44f7f874382b852d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Local in-memory cache — synced from Firebase on login
+const farmCache = {};
+
+async function loadAllFarmsFromDB() {
+  const snap = await db.ref('farms').once('value');
+  const data = snap.val() || {};
+  Object.keys(FARMS).forEach(fid => {
+    farmCache[fid] = data[fid] || { tasks:[], reports:[], visits:[], issues:[], notes:[], photos:['','',''] };
+    // Firebase turns arrays into objects — convert back
+    ['tasks','reports','visits','issues','notes'].forEach(k => {
+      if (farmCache[fid][k] && !Array.isArray(farmCache[fid][k]))
+        farmCache[fid][k] = Object.values(farmCache[fid][k]);
+      farmCache[fid][k] = farmCache[fid][k] || [];
+    });
+    if (!Array.isArray(farmCache[fid].photos)) farmCache[fid].photos = ['','',''];
+  });
+}
+
 // ====================== CONSTANTS ======================
 const USERS = {
   admin:      { name: 'Farm Manager',          role: 'Admin',        password: 'admin123', color: '#2d6a4f' },
@@ -416,9 +449,12 @@ function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? 
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
 function getFarmData(farmId) {
-  return load('farm_' + farmId, { tasks: [], reports: [], visits: [], issues: [], notes: [], photos: ['','',''] });
+  return farmCache[farmId] || { tasks:[], reports:[], visits:[], issues:[], notes:[], photos:['','',''] };
 }
-function saveFarmData(farmId, d) { save('farm_' + farmId, d); }
+function saveFarmData(farmId, d) {
+  farmCache[farmId] = d;
+  db.ref('farms/' + farmId).set(d).catch(e => showToast('⚠️ Sync error: ' + e.message));
+}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -439,13 +475,19 @@ let pendingPhotoSlot = null;
 let pendingTaskPhotos = [];
 
 // ====================== AUTH ======================
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('login-user').value;
   const p = document.getElementById('login-pass').value;
   if (!u) { showLoginError('Please select a user.'); return; }
   if (p !== USERS[u].password) { showLoginError('Wrong password.'); return; }
+  const btn = document.querySelector('#login-screen button');
+  btn.textContent = 'Loading…'; btn.disabled = true;
+  try {
+    await loadAllFarmsFromDB();
+  } catch(e) { console.warn('Firebase load failed, using cache', e); }
   currentUser = u;
   save('farm_session', u);
+  btn.textContent = 'Login'; btn.disabled = false;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
@@ -464,13 +506,14 @@ function doLogout() {
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
 // auto-resume
-(function() {
+(async function() {
   const s = load('farm_session', null);
   if (s && USERS[s]) {
+    try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed', e); }
     currentUser = s;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    setTimeout(initApp, 0);
+    initApp();
   }
 })();
 
