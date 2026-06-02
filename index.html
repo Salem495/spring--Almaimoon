@@ -527,6 +527,7 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 // ====================== APP INIT ======================
 const NAV_ADMIN = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'tasks',        label: '✅ Tasks' },
@@ -543,6 +544,7 @@ const NAV_ADMIN = [
 ];
 const NAV_ENG = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -553,6 +555,7 @@ const NAV_ENG = [
 ];
 const NAV_SOIL = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -564,6 +567,7 @@ const NAV_SOIL = [
 ];
 const NAV_AGRO = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -575,6 +579,7 @@ const NAV_AGRO = [
 ];
 const NAV_IRR = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -588,11 +593,13 @@ const NAV_IRR = [
 ];
 const NAV_MOIS = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '⚡ Electricity & Water' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
 ];
 const NAV_CHETAK = [
   { id: 'dashboard',    label: '📊 Dashboard' },
+  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 All Costs' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
 ];
@@ -648,6 +655,7 @@ function navigate(page) {
   else if (page === 'irr-jobs')     main.innerHTML = renderIrrJobs();
   else if (page === 'store')        main.innerHTML = renderStore();
   else if (page === 'farm-costs')   main.innerHTML = renderFarmCosts();
+  else if (page === 'blocks')       main.innerHTML = renderBlocks();
 }
 
 // ====================== FARM PROFILE (PHOTOS) ======================
@@ -1253,6 +1261,13 @@ function taskFormHTML(t, isAdmin=true) {
         ${cats.map(c=>`<option ${c===(t?.category||'')?'selected':''}>${c}</option>`).join('')}
       </select>
     </div></div>
+    <div class="form-row"><div class="form-group">
+      <label>🟩 Block</label>
+      <select id="t-block">
+        <option value="">— No Block —</option>
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}" ${('Block '+n)===(t?.block||'')?'selected':''}>Block ${n}</option>`).join('')}
+      </select>
+    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Description</label>
       <textarea id="t-desc">${esc(t?.description||'')}</textarea>
@@ -1316,6 +1331,7 @@ function saveTask(id) {
     category: document.getElementById('t-cat').value,
     description: document.getElementById('t-desc').value,
     progressNotes: document.getElementById('t-progress').value,
+    block: document.getElementById('t-block').value,
     photos: pendingTaskPhotos.filter(Boolean),
     farm: currentFarm,
     createdAt: existing?.createdAt||new Date().toISOString(),
@@ -1386,8 +1402,15 @@ function openAddReport() {
     <div class="form-row"><div class="form-group">
       <label>Date</label><input id="r-date" type="date" value="${today()}" />
     </div><div class="form-group">
-      <label>Farm Area</label><input id="r-area" placeholder="e.g. Block A, North Field" />
+      <label>🟩 Block</label>
+      <select id="r-block">
+        <option value="">— No Block —</option>
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
+      </select>
     </div></div>
+    <div class="form-row"><div class="form-group">
+      <label>Farm Area / Location</label><input id="r-area" placeholder="e.g. North Field, Greenhouse" />
+    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Findings *</label>
       <textarea id="r-findings" style="min-height:90px" placeholder="Describe observations..."></textarea>
@@ -1411,6 +1434,7 @@ function saveReport() {
   d.reports.push({
     id:uid(), title, type:document.getElementById('r-type').value,
     reportDate:document.getElementById('r-date').value,
+    block:document.getElementById('r-block').value,
     farmArea:document.getElementById('r-area').value,
     findings, recommendations:document.getElementById('r-recs').value,
     followUpDate:document.getElementById('r-followup').value,
@@ -1488,10 +1512,17 @@ function renderVisits(filterUser) {
 function openAddVisit() {
   openModal('Log Field Visit',`
     <div class="form-row"><div class="form-group">
-      <label>Farm Section *</label><input id="v-section" placeholder="e.g. Block A" />
+      <label>Farm Section / Location</label><input id="v-section" placeholder="e.g. North Field" />
     </div><div class="form-group">
       <label>Visit Date</label><input id="v-date" type="date" value="${today()}" />
     </div></div>
+    <div class="form-row"><div class="form-group">
+      <label>🟩 Block</label>
+      <select id="v-block">
+        <option value="">— No Block —</option>
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
+      </select>
+    </div><div class="form-group"></div></div>
     <div class="form-row"><div class="form-group">
       <label>Purpose</label><input id="v-purpose" placeholder="e.g. Soil sampling" />
     </div><div class="form-group">
@@ -1516,6 +1547,7 @@ function saveVisit() {
   if(!section||!notes){alert('Section and observations are required');return;}
   d.visits.push({
     id:uid(), farmSection:section,
+    block:document.getElementById('v-block').value,
     visitDate:document.getElementById('v-date').value,
     purpose:document.getElementById('v-purpose').value,
     duration:document.getElementById('v-duration').value?document.getElementById('v-duration').value+'h':'',
@@ -1598,8 +1630,15 @@ function openAddIssue() {
       <label>Category</label>
       <select id="i-cat"><option>Structural</option><option>Irrigation</option><option>Soil</option><option>Crop</option><option>Equipment</option><option>Pest/Disease</option><option>Water</option><option>General</option></select>
     </div><div class="form-group">
-      <label>Location</label><input id="i-loc" placeholder="Farm area" />
+      <label>🟩 Block</label>
+      <select id="i-block">
+        <option value="">— No Block —</option>
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
+      </select>
     </div></div>
+    <div class="form-row"><div class="form-group">
+      <label>Location / Area</label><input id="i-loc" placeholder="Farm area" />
+    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Description *</label>
       <textarea id="i-desc" style="min-height:90px" placeholder="Describe the issue..."></textarea>
@@ -1622,6 +1661,7 @@ function saveIssue(id) {
     id:id||uid(), title,
     priority:document.getElementById('i-priority').value,
     category:document.getElementById('i-cat').value,
+    block:document.getElementById('i-block').value,
     location:document.getElementById('i-loc').value,
     description:desc,
     solution:document.getElementById('i-sol').value,
@@ -1731,6 +1771,13 @@ function openAddNote() {
       <label>Tag</label>
       <select id="n-tag"><option>Note</option><option>Important</option><option>Reminder</option><option>Info</option></select>
     </div></div>
+    <div class="form-row"><div class="form-group">
+      <label>🟩 Block</label>
+      <select id="n-block">
+        <option value="">— No Block —</option>
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
+      </select>
+    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Content *</label><textarea id="n-content" style="min-height:100px" placeholder="Write your note..."></textarea>
     </div></div>
@@ -1742,7 +1789,7 @@ function saveNote() {
   const title=document.getElementById('n-title').value.trim();
   const content=document.getElementById('n-content').value.trim();
   if(!title||!content){alert('Title and content required');return;}
-  d.notes.push({id:uid(),title,content,tag:document.getElementById('n-tag').value,author:currentUser,createdAt:new Date().toISOString()});
+  d.notes.push({id:uid(),title,content,tag:document.getElementById('n-tag').value,block:document.getElementById('n-block').value,author:currentUser,createdAt:new Date().toISOString()});
   saveFarmData(currentFarm, d); closeModal(); navigate('notes');
 }
 function deleteNote(id) {
@@ -1846,6 +1893,132 @@ function fmtMonth(m) {
 function costVal(rec, fid, type) { return parseFloat(rec?.[type+'_'+fid])||0; }
 function costTotalType(rec, type) { return COST_FIELDS.reduce((s,f)=>s+costVal(rec,f.id,type),0); }
 function costTotal(rec) { return costTotalType(rec,'act'); } // actual is primary total
+
+// ====================== BLOCKS ======================
+const BLOCK_COLORS = ['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d','#6b4226','#5c6bc0','#c07c2a','#4a7c59','#7b2d8b'];
+
+let activeBlock = null; // null = overview, 'Block 1' = detail
+
+function renderBlocks() {
+  const d = getFarmData(currentFarm);
+  const farm = FARMS[currentFarm];
+
+  if (activeBlock) {
+    const b = activeBlock;
+    const tasks   = (d.tasks||[]).filter(x=>x.block===b);
+    const reports = (d.reports||[]).filter(x=>x.block===b);
+    const visits  = (d.visits||[]).filter(x=>x.block===b);
+    const issues  = (d.issues||[]).filter(x=>x.block===b);
+    const notes   = (d.notes||[]).filter(x=>x.block===b);
+    const bIdx = parseInt(b.split(' ')[1]) - 1;
+    const color = BLOCK_COLORS[bIdx] || '#2d6a4f';
+    return `
+    <div class="card" style="margin-bottom:14px;border-left:5px solid ${color}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-secondary" onclick="activeBlock=null;navigate('blocks')" style="padding:6px 14px">← Back</button>
+        <h2 style="margin:0;color:${color}">🟩 ${b} — ${farm.name}</h2>
+      </div>
+    </div>
+    <div class="stats-grid" style="margin-bottom:18px">
+      <div class="stat-card green"><div class="icon">✅</div><div class="label">Tasks</div><div class="value">${tasks.length}</div></div>
+      <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${reports.length}</div></div>
+      <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Visits</div><div class="value">${visits.length}</div></div>
+      <div class="stat-card purple"><div class="icon">⚠️</div><div class="label">Issues</div><div class="value">${issues.length}</div></div>
+    </div>
+
+    ${tasks.length ? `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-bottom:12px">✅ Tasks</h3>
+      ${tasks.map(t=>`
+      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px;border-left:4px solid ${t.priority==='High'?'#d62828':t.priority==='Medium'?'#f4a261':'#aaa'}">
+        <div style="font-weight:700">${esc(t.title)}</div>
+        <div style="font-size:12px;color:var(--gray)">${USERS[t.assignee]?.name||t.assignee} · ${t.status} · Due ${fmt(t.dueDate)}</div>
+        ${t.description?`<div style="font-size:12px;margin-top:4px">${esc(t.description)}</div>`:''}
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${reports.length ? `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-bottom:12px">📋 Reports</h3>
+      ${reports.map(r=>`
+      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px">
+        <div style="font-weight:700">${esc(r.title)}</div>
+        <div style="font-size:12px;color:var(--gray)">${USERS[r.author]?.name||r.author} · ${fmt(r.reportDate)} · ${r.type}</div>
+        ${r.findings?`<div style="font-size:12px;margin-top:4px">${esc(r.findings)}</div>`:''}
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${visits.length ? `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-bottom:12px">🚜 Visits</h3>
+      ${visits.map(v=>`
+      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px">
+        <div style="font-weight:700">${esc(v.farmSection||v.purpose||'Visit')}</div>
+        <div style="font-size:12px;color:var(--gray)">${USERS[v.author]?.name||v.author} · ${fmt(v.visitDate)}${v.duration?' · '+v.duration:''}</div>
+        ${v.notes?`<div style="font-size:12px;margin-top:4px">${esc(v.notes)}</div>`:''}
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${issues.length ? `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-bottom:12px">⚠️ Issues</h3>
+      ${issues.map(i=>`
+      <div style="padding:10px;border-radius:8px;background:#fff5f5;margin-bottom:8px;border-left:4px solid ${i.priority==='High'?'#d62828':'#f4a261'}">
+        <div style="font-weight:700">${esc(i.title)}</div>
+        <div style="font-size:12px;color:var(--gray)">${USERS[i.author]?.name||i.author} · ${i.status} · ${i.category}</div>
+        ${i.description?`<div style="font-size:12px;margin-top:4px">${esc(i.description)}</div>`:''}
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${notes.length ? `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-bottom:12px">📝 Notes</h3>
+      ${notes.map(n=>`
+      <div style="padding:10px;border-radius:8px;background:#fffbf0;margin-bottom:8px">
+        <div style="font-weight:700">${esc(n.title)}</div>
+        <div style="font-size:12px;color:var(--gray)">${USERS[n.author]?.name||n.author} · ${timeAgo(n.createdAt)}</div>
+        ${n.content?`<div style="font-size:12px;margin-top:4px">${esc(n.content)}</div>`:''}
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${!tasks.length&&!reports.length&&!visits.length&&!issues.length&&!notes.length ? `
+    <div class="card"><div class="empty"><div class="empty-icon">🟩</div><p>No data in ${b} yet.<br>Add tasks, reports, visits, issues or notes and assign them to ${b}.</p></div></div>` : ''}
+    `;
+  }
+
+  // Overview — 10 block cards
+  return `
+  <div class="card" style="margin-bottom:18px">
+    <h2>🟩 Farm Blocks — ${farm.name}</h2>
+    <p style="color:var(--gray);font-size:13px">Each block collects tasks, reports, visits, issues and notes assigned to it. Click a block to view its data.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+    ${[1,2,3,4,5,6,7,8,9,10].map(n => {
+      const b = 'Block ' + n;
+      const color = BLOCK_COLORS[n-1];
+      const tasks   = (d.tasks||[]).filter(x=>x.block===b).length;
+      const reports = (d.reports||[]).filter(x=>x.block===b).length;
+      const visits  = (d.visits||[]).filter(x=>x.block===b).length;
+      const issues  = (d.issues||[]).filter(x=>x.block===b).length;
+      const notes   = (d.notes||[]).filter(x=>x.block===b).length;
+      const total   = tasks+reports+visits+issues+notes;
+      return `
+      <div onclick="activeBlock='${b}';navigate('blocks')"
+           style="background:#fff;border-radius:12px;padding:18px;box-shadow:var(--shadow);border-top:5px solid ${color};cursor:pointer;transition:transform .15s"
+           onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:28px;text-align:center;margin-bottom:6px">🟩</div>
+        <div style="font-weight:800;font-size:16px;text-align:center;color:${color};margin-bottom:10px">${b}</div>
+        <div style="font-size:12px;color:var(--gray);display:grid;grid-template-columns:1fr 1fr;gap:4px;text-align:center">
+          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${tasks}</strong><br>Tasks</div>
+          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${reports}</strong><br>Reports</div>
+          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${visits}</strong><br>Visits</div>
+          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${issues}</strong><br>Issues</div>
+        </div>
+        ${total===0?'<div style="text-align:center;font-size:11px;color:#bbb;margin-top:8px">No data yet</div>':'<div style="text-align:center;font-size:11px;color:'+color+';margin-top:8px;font-weight:600">'+total+' record'+(total!==1?'s':'')+'</div>'}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
 
 function renderFarmCosts() {
   const d = getFarmData(currentFarm);
