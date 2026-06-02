@@ -403,13 +403,17 @@ const firebaseConfig = {
   messagingSenderId: "579853148504",
   appId: "1:579853148504:web:76306d44f7f874382b852d"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e) { console.warn('Firebase init failed, running offline:', e.message); }
 
 // Local in-memory cache — synced from Firebase on login
 const farmCache = {};
 
 async function loadAllFarmsFromDB() {
+  if (!db) return;
   const snap = await db.ref('farms').once('value');
   const data = snap.val() || {};
   Object.keys(FARMS).forEach(fid => {
@@ -453,7 +457,7 @@ function getFarmData(farmId) {
 }
 function saveFarmData(farmId, d) {
   farmCache[farmId] = d;
-  db.ref('farms/' + farmId).set(d).catch(e => showToast('⚠️ Sync error: ' + e.message));
+  if (db) db.ref('farms/' + farmId).set(d).catch(e => showToast('⚠️ Sync error: ' + e.message));
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -487,10 +491,12 @@ async function doLogin() {
   } catch(e) { console.warn('Firebase load failed, using cache', e); }
   // Track login stats
   try {
-    const ref = db.ref('loginStats/' + u);
-    const snap = await ref.once('value');
-    const prev = snap.val() || { count: 0 };
-    await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
+    if (db) {
+      const ref = db.ref('loginStats/' + u);
+      const snap = await ref.once('value');
+      const prev = snap.val() || { count: 0 };
+      await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
+    }
   } catch(e) { console.warn('Login stats error', e); }
   currentUser = u;
   save('farm_session', u);
@@ -1842,8 +1848,7 @@ async function renderTeam() {
   const farm = FARMS[currentFarm];
   // Load login stats from Firebase
   try {
-    const snap = await db.ref('loginStats').once('value');
-    _loginStats = snap.val() || {};
+    if (db) { const snap = await db.ref('loginStats').once('value'); _loginStats = snap.val() || {}; }
   } catch(e) { _loginStats = {}; }
 
   document.getElementById('main-content').innerHTML = `
