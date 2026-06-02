@@ -414,7 +414,9 @@ const farmCache = {};
 
 async function loadAllFarmsFromDB() {
   if (!db) return;
-  const snap = await db.ref('farms').once('value');
+  // Timeout after 8 seconds so login never hangs forever
+  const timeout = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 8000));
+  const snap = await Promise.race([db.ref('farms').once('value'), timeout]);
   const data = snap.val() || {};
   Object.keys(FARMS).forEach(fid => {
     farmCache[fid] = data[fid] || { tasks:[], reports:[], visits:[], issues:[], notes:[], photos:['','',''] };
@@ -486,18 +488,16 @@ async function doLogin() {
   if (p !== USERS[u].password) { showLoginError('Wrong password.'); return; }
   const btn = document.querySelector('#login-screen button');
   btn.textContent = 'Loading…'; btn.disabled = true;
-  try {
-    await loadAllFarmsFromDB();
-  } catch(e) { console.warn('Firebase load failed, using cache', e); }
-  // Track login stats
+  try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed, using cache', e); }
   try {
     if (db) {
       const ref = db.ref('loginStats/' + u);
-      const snap = await ref.once('value');
+      const snap = await Promise.race([ref.once('value'), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))]);
       const prev = snap.val() || { count: 0 };
       await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
     }
   } catch(e) { console.warn('Login stats error', e); }
+  btn.textContent = 'Login'; btn.disabled = false;
   currentUser = u;
   save('farm_session', u);
   btn.textContent = 'Login'; btn.disabled = false;
