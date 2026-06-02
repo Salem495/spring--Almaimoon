@@ -390,8 +390,6 @@
   <img id="lightbox-img" src="" alt="" />
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 // ====================== FIREBASE ======================
 const firebaseConfig = {
@@ -404,10 +402,27 @@ const firebaseConfig = {
   appId: "1:579853148504:web:76306d44f7f874382b852d"
 };
 let db = null;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-} catch(e) { console.warn('Firebase init failed, running offline:', e.message); }
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = res;
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function initFirebase() {
+  try {
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch(e) { console.warn('Firebase init failed, running offline:', e.message); }
+}
+
+const firebaseReady = initFirebase();
 
 // Local in-memory cache — synced from Firebase on login
 const farmCache = {};
@@ -488,6 +503,7 @@ async function doLogin() {
   if (p !== USERS[u].password) { showLoginError('Wrong password.'); return; }
   const btn = document.querySelector('#login-screen button');
   btn.textContent = 'Loading…'; btn.disabled = true;
+  try { await Promise.race([firebaseReady, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),6000))]); } catch(e) { console.warn('Firebase not ready:', e.message); }
   try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed, using cache', e); }
   try {
     if (db) {
@@ -522,6 +538,7 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 (async function() {
   const s = load('farm_session', null);
   if (s && USERS[s]) {
+    try { await Promise.race([firebaseReady, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),6000))]); } catch(e) {}
     try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed', e); }
     currentUser = s;
     document.getElementById('login-screen').style.display = 'none';
