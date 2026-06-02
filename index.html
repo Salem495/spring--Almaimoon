@@ -2003,6 +2003,132 @@ function openEditBlockProfile(b) {
      <button class="btn btn-primary" onclick="saveBlockInfo('${b}','farm-profile')">Save</button>`);
 }
 
+     <button class="btn btn-primary" onclick="saveBlockInfo('${b}','farm-profile')">Save</button>`);
+}
+
+// ====================== BLOCK COSTS ======================
+const BLOCK_COST_CATS = [
+  { id:'labor',      label:'Labor',         icon:'👷', color:'#1d3557' },
+  { id:'seeds',      label:'Seeds',         icon:'🌱', color:'#2d6a4f' },
+  { id:'pesticides', label:'Pesticides',    icon:'🧪', color:'#8b2252' },
+  { id:'nutrition',  label:'Nutrition',     icon:'🌿', color:'#6b4226' },
+  { id:'irrigation', label:'Irrigation',    icon:'💧', color:'#457b9d' },
+  { id:'equipment',  label:'Equipment',     icon:'🔧', color:'#e07b39' },
+  { id:'other',      label:'Other',         icon:'📦', color:'#7b2d8b' },
+];
+
+function openAddBlockCost(block) {
+  openModal(`💰 Add Cost — ${block}`,`
+    <div class="form-row">
+      <div class="form-group"><label>Date *</label>
+        <input id="bc-date" type="date" value="${today()}" /></div>
+      <div class="form-group"><label>Category *</label>
+        <select id="bc-cat">
+          ${BLOCK_COST_CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Amount (AED) *</label>
+        <input id="bc-amount" type="number" min="0" step="0.01" placeholder="0.00" /></div>
+      <div class="form-group"><label>Description</label>
+        <input id="bc-desc" placeholder="e.g. Fertilizer purchase" /></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveBlockCost('${block}')">Add Cost</button>`);
+}
+
+function saveBlockCost(block) {
+  const d = getFarmData(currentFarm);
+  const amount = parseFloat(document.getElementById('bc-amount').value);
+  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+  d.blockCosts = d.blockCosts || [];
+  d.blockCosts.push({
+    id: uid(), block,
+    date: document.getElementById('bc-date').value,
+    category: document.getElementById('bc-cat').value,
+    amount, description: document.getElementById('bc-desc').value,
+    author: currentUser, createdAt: new Date().toISOString(),
+  });
+  saveFarmData(currentFarm, d);
+  closeModal();
+  navigate('blocks');
+}
+
+function deleteBlockCost(id) {
+  if (!confirm('Delete this cost entry?')) return;
+  const d = getFarmData(currentFarm);
+  d.blockCosts = (d.blockCosts||[]).filter(x=>x.id!==id);
+  saveFarmData(currentFarm, d);
+  navigate('blocks');
+}
+
+function blockCostTotal(costs, block, month) {
+  return (costs||[])
+    .filter(c => c.block===block && (!month || c.date?.startsWith(month)))
+    .reduce((s,c)=>s+parseFloat(c.amount||0),0);
+}
+
+function renderBlockCostSection(d, b, color) {
+  const costs = (d.blockCosts||[]).filter(c=>c.block===b).sort((a,x)=>new Date(x.date)-new Date(a.date));
+  const thisM = currentMonth();
+  const totalAll  = costs.reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const totalMonth= costs.filter(c=>c.date?.startsWith(thisM)).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const isAdmin = currentUser === 'admin';
+  const byCat = {};
+  costs.forEach(c=>{ byCat[c.category]=(byCat[c.category]||0)+parseFloat(c.amount||0); });
+
+  return `
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;color:${color}">💰 Block Costs</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12px;background:#f0f4ff;padding:4px 10px;border-radius:20px">📅 This month: <strong>${totalMonth.toLocaleString()} AED</strong></span>
+        <span style="font-size:12px;background:#f0fff4;padding:4px 10px;border-radius:20px">📊 All time: <strong>${totalAll.toLocaleString()} AED</strong></span>
+        <button class="btn btn-primary btn-sm" onclick="openAddBlockCost('${b}')">+ Add Cost</button>
+      </div>
+    </div>
+    ${Object.keys(byCat).length ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${BLOCK_COST_CATS.filter(c=>byCat[c.id]).map(c=>`
+        <span style="background:${c.color}18;color:${c.color};border:1px solid ${c.color}33;border-radius:20px;padding:3px 10px;font-size:12px">
+          ${c.icon} ${c.label}: <strong>${byCat[c.id].toLocaleString()} AED</strong>
+        </span>`).join('')}
+    </div>` : ''}
+    ${costs.length === 0 ? `<div class="empty" style="padding:20px 0"><div class="empty-icon">💰</div><p>No costs added yet</p></div>` : `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#f8f9fa">
+          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Date</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Category</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Description</th>
+          <th style="padding:8px 10px;text-align:right;border-bottom:2px solid #e9ecef">Amount</th>
+          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">By</th>
+          ${isAdmin?'<th style="padding:8px 10px;border-bottom:2px solid #e9ecef"></th>':''}
+        </tr></thead>
+        <tbody>
+          ${costs.map(c=>{
+            const cat = BLOCK_COST_CATS.find(x=>x.id===c.category)||{icon:'📦',label:c.category,color:'#666'};
+            return `<tr style="border-bottom:1px solid #f0f0f0">
+              <td style="padding:8px 10px">${fmt(c.date)}</td>
+              <td style="padding:8px 10px"><span style="color:${cat.color}">${cat.icon} ${cat.label}</span></td>
+              <td style="padding:8px 10px;color:var(--gray)">${esc(c.description||'—')}</td>
+              <td style="padding:8px 10px;text-align:right;font-weight:700;color:${color}">${parseFloat(c.amount).toLocaleString()} AED</td>
+              <td style="padding:8px 10px;font-size:11px;color:var(--gray)">${USERS[c.author]?.name||c.author}</td>
+              ${isAdmin?`<td style="padding:8px 10px"><button class="btn btn-secondary btn-sm" style="color:#d62828;font-size:11px" onclick="deleteBlockCost('${c.id}')">✕</button></td>`:''}
+            </tr>`;
+          }).join('')}
+          <tr style="background:#f0f4f0;font-weight:700;border-top:2px solid #dee2e6">
+            <td colspan="${isAdmin?4:3}" style="padding:8px 10px">Total</td>
+            <td style="padding:8px 10px;text-align:right;color:${color}">${totalAll.toLocaleString()} AED</td>
+            <td colspan="${isAdmin?2:1}"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`}
+  </div>`;
+}
+
 function renderBlocks() {
   const d = getFarmData(currentFarm);
   const farm = FARMS[currentFarm];
@@ -2044,6 +2170,8 @@ function renderBlocks() {
       <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Visits</div><div class="value">${visits.length}</div></div>
       <div class="stat-card purple"><div class="icon">⚠️</div><div class="label">Issues</div><div class="value">${issues.length}</div></div>
     </div>
+
+    ${renderBlockCostSection(d, b, color)}
 
     ${tasks.length ? `
     <div class="card" style="margin-bottom:14px">
@@ -2260,6 +2388,64 @@ function renderFarmCosts() {
         </tr></tfoot>`:''}
       </table>
     </div>
+  </div>
+
+  ${renderAllBlocksCostSummary(d)}`;
+}
+
+function renderAllBlocksCostSummary(d) {
+  const blockCosts = d.blockCosts || [];
+  if (blockCosts.length === 0) return '';
+  const thisM = currentMonth();
+  const rows = [1,2,3,4,5,6,7,8,9,10].map(n => {
+    const b = 'Block ' + n;
+    const allTime = blockCosts.filter(c=>c.block===b).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+    const month   = blockCosts.filter(c=>c.block===b&&c.date?.startsWith(thisM)).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+    const byCat   = {};
+    blockCosts.filter(c=>c.block===b).forEach(c=>{ byCat[c.category]=(byCat[c.category]||0)+parseFloat(c.amount||0); });
+    return { b, allTime, month, byCat };
+  }).filter(r=>r.allTime>0);
+  if (!rows.length) return '';
+  const grandMonth   = rows.reduce((s,r)=>s+r.month,0);
+  const grandAllTime = rows.reduce((s,r)=>s+r.allTime,0);
+  return `
+  <div class="card" style="margin-top:18px">
+    <h2>🟩 Block-Level Costs — ${FARMS[currentFarm].name}</h2>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <span style="background:#f0f4ff;padding:6px 14px;border-radius:20px;font-size:13px">📅 This month: <strong>${grandMonth.toLocaleString()} AED</strong></span>
+      <span style="background:#f0fff4;padding:6px 14px;border-radius:20px;font-size:13px">📊 All-time: <strong>${grandAllTime.toLocaleString()} AED</strong></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#f8f9fa">
+          <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #e9ecef">Block</th>
+          ${BLOCK_COST_CATS.map(c=>`<th style="padding:9px 8px;text-align:right;border-bottom:2px solid #e9ecef;color:${c.color}">${c.icon}<br><small>${c.label}</small></th>`).join('')}
+          <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#457b9d">This Month</th>
+          <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#2d6a4f">All Time</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>{
+            const color = BLOCK_COLORS[parseInt(r.b.split(' ')[1])-1];
+            return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="activeBlock='${r.b}';navigate('blocks')" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+              <td style="padding:9px 12px;font-weight:700;color:${color}">🟩 ${r.b}</td>
+              ${BLOCK_COST_CATS.map(c=>`<td style="padding:9px 8px;text-align:right;font-size:12px;color:${c.color}">${r.byCat[c.id]?r.byCat[c.id].toLocaleString():''}</td>`).join('')}
+              <td style="padding:9px 12px;text-align:right;font-weight:600;color:#457b9d">${r.month?r.month.toLocaleString()+' AED':'—'}</td>
+              <td style="padding:9px 12px;text-align:right;font-weight:700;color:#2d6a4f">${r.allTime.toLocaleString()} AED</td>
+            </tr>`;
+          }).join('')}
+          <tr style="background:#f0f4f0;font-weight:700;border-top:2px solid #dee2e6">
+            <td style="padding:9px 12px">Total</td>
+            ${BLOCK_COST_CATS.map(c=>{
+              const t=rows.reduce((s,r)=>s+(r.byCat[c.id]||0),0);
+              return `<td style="padding:9px 8px;text-align:right;font-size:12px;color:${c.color}">${t?t.toLocaleString():''}</td>`;
+            }).join('')}
+            <td style="padding:9px 12px;text-align:right;color:#457b9d">${grandMonth.toLocaleString()} AED</td>
+            <td style="padding:9px 12px;text-align:right;color:#2d6a4f">${grandAllTime.toLocaleString()} AED</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--gray);margin-top:8px">Click any row to open that block's cost detail</p>
   </div>`;
 }
 
