@@ -757,6 +757,43 @@ function renderFarmProfile() {
     <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${(d.reports||[]).length}</div></div>
     <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${(d.visits||[]).length}</div></div>
     <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${(d.issues||[]).filter(i=>i.status!=='Resolved').length}</div></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2>🟩 Farm Blocks — Sub-Areas</h2>
+    <p style="color:var(--gray);font-size:13px;margin-bottom:16px">Each block is a defined area within the farm with its own irrigation system, crop type, and cost tracking. Click a block to view its full data.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+      ${[1,2,3,4,5,6,7,8,9,10].map(n => {
+        const b = 'Block ' + n;
+        const color = BLOCK_COLORS[n-1];
+        const info = (d.blockInfo||{})[b] || {};
+        const area = (info.width&&info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(0)+' m²' : null;
+        const tasks  = (d.tasks||[]).filter(x=>x.block===b).length;
+        const issues = (d.issues||[]).filter(x=>x.block===b&&x.status!=='Resolved').length;
+        return `
+        <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);border-top:4px solid ${color};overflow:hidden">
+          ${info.photo
+            ? `<img src="${info.photo}" style="width:100%;height:110px;object-fit:cover;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')" />`
+            : `<div style="height:60px;background:linear-gradient(135deg,${color}18,${color}33);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')">
+                <span style="font-size:22px">🟩</span>
+               </div>`}
+          <div style="padding:12px">
+            <div style="font-weight:800;font-size:14px;color:${color};margin-bottom:6px;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')">${b}</div>
+            ${info.width||info.height ? `<div style="font-size:12px;margin-bottom:4px">📐 <strong>${info.width||'?'}×${info.height||'?'} m</strong>${area?' · '+area:''}</div>` : `<div style="font-size:11px;color:#bbb;margin-bottom:4px">No size set</div>`}
+            ${info.irrigation ? `<div style="font-size:12px;margin-bottom:4px">💧 ${esc(info.irrigation)}</div>` : ''}
+            ${info.crop ? `<div style="font-size:12px;margin-bottom:4px">🌱 ${esc(info.crop)}</div>` : ''}
+            <div style="display:flex;gap:6px;margin-top:8px;font-size:11px">
+              <span style="background:#f0f8f0;color:#2d6a4f;padding:3px 8px;border-radius:20px">✅ ${tasks} tasks</span>
+              ${issues>0?`<span style="background:#fff0f0;color:#d62828;padding:3px 8px;border-radius:20px">⚠️ ${issues} issues</span>`:''}
+            </div>
+            ${isAdmin?`<div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-secondary" style="flex:1;font-size:11px;padding:5px" onclick="openEditBlockProfile('${b}')">✏️ Edit</button>
+              <button class="btn btn-primary" style="flex:1;font-size:11px;padding:5px" onclick="activeBlock='${b}';navigate('blocks')">View →</button>
+            </div>`:`<button class="btn btn-secondary" style="width:100%;font-size:11px;padding:5px;margin-top:8px" onclick="activeBlock='${b}';navigate('blocks')">View Block →</button>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
   </div>`;
 }
 
@@ -1899,33 +1936,7 @@ const BLOCK_COLORS = ['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d','#6b4226
 
 let activeBlock = null; // null = overview, 'Block 1' = detail
 
-function openEditBlock(b) {
-  const d = getFarmData(currentFarm);
-  const info = (d.blockInfo||{})[b] || {};
-  openModal(`Edit ${b} Info`, `
-    <div class="form-group">
-      <label>📐 Size (meters)</label>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="bl-w" type="number" min="0" step="0.1" placeholder="Width" value="${esc(info.width||'')}" style="flex:1" />
-        <span style="color:var(--gray)">×</span>
-        <input id="bl-h" type="number" min="0" step="0.1" placeholder="Length" value="${esc(info.height||'')}" style="flex:1" />
-        <span style="color:var(--gray);font-size:12px">m</span>
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:12px">
-      <label>📷 Block Photo</label>
-      ${info.photo?`<img src="${info.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`:''}
-      <div class="task-photo-upload" onclick="document.getElementById('bl-photo-input').click()" style="margin-top:4px">
-        <input type="file" id="bl-photo-input" accept="image/*" onchange="previewBlockPhoto(event)" style="display:none" />
-        <div class="upload-icon">📷</div>
-        <p>${info.photo?'Replace photo':'Upload photo'}</p>
-      </div>
-      <div id="bl-photo-preview"></div>
-    </div>
-    <input type="hidden" id="bl-photo-data" value="${info.photo||''}" />
-  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveBlockInfo('${b}')">Save</button>`);
-}
+function openEditBlock(b) { openEditBlockProfile(b); }
 
 function previewBlockPhoto(e) {
   const file = e.target.files[0]; if (!file) return;
@@ -1938,17 +1949,58 @@ function previewBlockPhoto(e) {
   reader.readAsDataURL(file);
 }
 
-function saveBlockInfo(b) {
+function saveBlockInfo(b, returnTo) {
   const d = getFarmData(currentFarm);
   d.blockInfo = d.blockInfo || {};
   d.blockInfo[b] = {
-    width:  document.getElementById('bl-w').value,
-    height: document.getElementById('bl-h').value,
-    photo:  document.getElementById('bl-photo-data').value,
+    width:      document.getElementById('bl-w').value,
+    height:     document.getElementById('bl-h').value,
+    photo:      document.getElementById('bl-photo-data').value,
+    irrigation: document.getElementById('bl-irr')?.value || (d.blockInfo[b]?.irrigation||''),
+    crop:       document.getElementById('bl-crop')?.value || (d.blockInfo[b]?.crop||''),
+    notes:      document.getElementById('bl-notes')?.value || (d.blockInfo[b]?.notes||''),
   };
   saveFarmData(currentFarm, d);
   closeModal();
-  navigate('blocks');
+  navigate(returnTo || 'blocks');
+}
+
+function openEditBlockProfile(b) {
+  const d = getFarmData(currentFarm);
+  const info = (d.blockInfo||{})[b] || {};
+  openModal(`✏️ Edit ${b}`, `
+    <div class="form-row">
+      <div class="form-group"><label>📐 Width (m)</label>
+        <input id="bl-w" type="number" min="0" step="0.1" value="${esc(info.width||'')}" placeholder="Width" /></div>
+      <div class="form-group"><label>📐 Length (m)</label>
+        <input id="bl-h" type="number" min="0" step="0.1" value="${esc(info.height||'')}" placeholder="Length" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>💧 Irrigation System</label>
+        <select id="bl-irr">
+          <option value="">— Select —</option>
+          ${['Drip','Sprinkler','Flood','Subsurface Drip','Manual','Mixed'].map(v=>`<option value="${v}" ${v===(info.irrigation||'')?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>🌱 Crop / Plant Type</label>
+        <input id="bl-crop" value="${esc(info.crop||'')}" placeholder="e.g. Mango, Tomato, Dates" />
+      </div>
+    </div>
+    <div class="form-group"><label>📝 Notes</label>
+      <textarea id="bl-notes" style="min-height:60px" placeholder="Any notes about this block...">${esc(info.notes||'')}</textarea>
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>📷 Block Photo</label>
+      ${info.photo?`<img src="${info.photo}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`:''}
+      <div class="task-photo-upload" onclick="document.getElementById('bl-photo-input').click()" style="margin-top:4px">
+        <input type="file" id="bl-photo-input" accept="image/*" onchange="previewBlockPhoto(event)" style="display:none" />
+        <div class="upload-icon">📷</div><p>${info.photo?'Replace photo':'Upload photo'}</p>
+      </div>
+      <div id="bl-photo-preview"></div>
+    </div>
+    <input type="hidden" id="bl-photo-data" value="${info.photo||''}" />
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveBlockInfo('${b}','farm-profile')">Save</button>`);
 }
 
 function renderBlocks() {
@@ -2604,7 +2656,12 @@ function openAddPlantHealth(existingId) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Plant Type / Crop</label><input id="ph-plant" value="${esc(ex?.plantType||'')}" placeholder="e.g. Mango, Tomato" /></div>
-      <div class="form-group"><label>Location / Block</label><input id="ph-loc" value="${esc(ex?.location||'')}" placeholder="e.g. Block C" /></div>
+      <div class="form-group"><label>🟩 Block</label>
+        <select id="ph-loc">
+          <option value="">— No Block —</option>
+          ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}" ${'Block '+n===(ex?.location||'')?'selected':''}>Block ${n}</option>`).join('')}
+        </select>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Severity</label>
