@@ -390,6 +390,8 @@
   <img id="lightbox-img" src="" alt="" />
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 // ====================== FIREBASE ======================
 const firebaseConfig = {
@@ -401,37 +403,14 @@ const firebaseConfig = {
   messagingSenderId: "579853148504",
   appId: "1:579853148504:web:76306d44f7f874382b852d"
 };
-let db = null;
-
-function loadScript(src) {
-  return new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = res;
-    s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-
-async function initFirebase() {
-  try {
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  } catch(e) { console.warn('Firebase init failed, running offline:', e.message); }
-}
-
-const firebaseReady = initFirebase();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // Local in-memory cache — synced from Firebase on login
 const farmCache = {};
 
 async function loadAllFarmsFromDB() {
-  if (!db) return;
-  // Timeout after 8 seconds so login never hangs forever
-  const timeout = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 8000));
-  const snap = await Promise.race([db.ref('farms').once('value'), timeout]);
+  const snap = await db.ref('farms').once('value');
   const data = snap.val() || {};
   Object.keys(FARMS).forEach(fid => {
     farmCache[fid] = data[fid] || { tasks:[], reports:[], visits:[], issues:[], notes:[], photos:['','',''] };
@@ -474,7 +453,7 @@ function getFarmData(farmId) {
 }
 function saveFarmData(farmId, d) {
   farmCache[farmId] = d;
-  if (db) db.ref('farms/' + farmId).set(d).catch(e => showToast('⚠️ Sync error: ' + e.message));
+  db.ref('farms/' + farmId).set(d).catch(e => showToast('⚠️ Sync error: ' + e.message));
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -503,17 +482,16 @@ async function doLogin() {
   if (p !== USERS[u].password) { showLoginError('Wrong password.'); return; }
   const btn = document.querySelector('#login-screen button');
   btn.textContent = 'Loading…'; btn.disabled = true;
-  try { await Promise.race([firebaseReady, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),6000))]); } catch(e) { console.warn('Firebase not ready:', e.message); }
-  try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed, using cache', e); }
   try {
-    if (db) {
-      const ref = db.ref('loginStats/' + u);
-      const snap = await Promise.race([ref.once('value'), new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))]);
-      const prev = snap.val() || { count: 0 };
-      await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
-    }
+    await loadAllFarmsFromDB();
+  } catch(e) { console.warn('Firebase load failed, using cache', e); }
+  // Track login stats
+  try {
+    const ref = db.ref('loginStats/' + u);
+    const snap = await ref.once('value');
+    const prev = snap.val() || { count: 0 };
+    await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
   } catch(e) { console.warn('Login stats error', e); }
-  btn.textContent = 'Login'; btn.disabled = false;
   currentUser = u;
   save('farm_session', u);
   btn.textContent = 'Login'; btn.disabled = false;
@@ -538,7 +516,6 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 (async function() {
   const s = load('farm_session', null);
   if (s && USERS[s]) {
-    try { await Promise.race([firebaseReady, new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),6000))]); } catch(e) {}
     try { await loadAllFarmsFromDB(); } catch(e) { console.warn('Firebase load failed', e); }
     currentUser = s;
     document.getElementById('login-screen').style.display = 'none';
@@ -550,7 +527,6 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 // ====================== APP INIT ======================
 const NAV_ADMIN = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'tasks',        label: '✅ Tasks' },
@@ -567,7 +543,6 @@ const NAV_ADMIN = [
 ];
 const NAV_ENG = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -578,7 +553,6 @@ const NAV_ENG = [
 ];
 const NAV_SOIL = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -590,7 +564,6 @@ const NAV_SOIL = [
 ];
 const NAV_AGRO = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -602,7 +575,6 @@ const NAV_AGRO = [
 ];
 const NAV_IRR = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 Farm Costs' },
   { id: 'farm-profile', label: '🏡 Farm Profile' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
@@ -616,13 +588,11 @@ const NAV_IRR = [
 ];
 const NAV_MOIS = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '⚡ Electricity & Water' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
 ];
 const NAV_CHETAK = [
   { id: 'dashboard',    label: '📊 Dashboard' },
-  { id: 'blocks',       label: '🟩 Blocks' },
   { id: 'farm-costs',   label: '💰 All Costs' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
 ];
@@ -678,7 +648,6 @@ function navigate(page) {
   else if (page === 'irr-jobs')     main.innerHTML = renderIrrJobs();
   else if (page === 'store')        main.innerHTML = renderStore();
   else if (page === 'farm-costs')   main.innerHTML = renderFarmCosts();
-  else if (page === 'blocks')       main.innerHTML = renderBlocks();
 }
 
 // ====================== FARM PROFILE (PHOTOS) ======================
@@ -780,43 +749,6 @@ function renderFarmProfile() {
     <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${(d.reports||[]).length}</div></div>
     <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${(d.visits||[]).length}</div></div>
     <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${(d.issues||[]).filter(i=>i.status!=='Resolved').length}</div></div>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <h2>🟩 Farm Blocks — Sub-Areas</h2>
-    <p style="color:var(--gray);font-size:13px;margin-bottom:16px">Each block is a defined area within the farm with its own irrigation system, crop type, and cost tracking. Click a block to view its full data.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
-      ${[1,2,3,4,5,6,7,8,9,10].map(n => {
-        const b = 'Block ' + n;
-        const color = BLOCK_COLORS[n-1];
-        const info = (d.blockInfo||{})[b] || {};
-        const area = (info.width&&info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(0)+' m²' : null;
-        const tasks  = (d.tasks||[]).filter(x=>x.block===b).length;
-        const issues = (d.issues||[]).filter(x=>x.block===b&&x.status!=='Resolved').length;
-        return `
-        <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);border-top:4px solid ${color};overflow:hidden">
-          ${info.photo
-            ? `<img src="${info.photo}" style="width:100%;height:110px;object-fit:cover;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')" />`
-            : `<div style="height:60px;background:linear-gradient(135deg,${color}18,${color}33);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')">
-                <span style="font-size:22px">🟩</span>
-               </div>`}
-          <div style="padding:12px">
-            <div style="font-weight:800;font-size:14px;color:${color};margin-bottom:6px;cursor:pointer" onclick="activeBlock='${b}';navigate('blocks')">${b}</div>
-            ${info.width||info.height ? `<div style="font-size:12px;margin-bottom:4px">📐 <strong>${info.width||'?'}×${info.height||'?'} m</strong>${area?' · '+area:''}</div>` : `<div style="font-size:11px;color:#bbb;margin-bottom:4px">No size set</div>`}
-            ${info.irrigation ? `<div style="font-size:12px;margin-bottom:4px">💧 ${esc(info.irrigation)}</div>` : ''}
-            ${info.crop ? `<div style="font-size:12px;margin-bottom:4px">🌱 ${esc(info.crop)}</div>` : ''}
-            <div style="display:flex;gap:6px;margin-top:8px;font-size:11px">
-              <span style="background:#f0f8f0;color:#2d6a4f;padding:3px 8px;border-radius:20px">✅ ${tasks} tasks</span>
-              ${issues>0?`<span style="background:#fff0f0;color:#d62828;padding:3px 8px;border-radius:20px">⚠️ ${issues} issues</span>`:''}
-            </div>
-            ${isAdmin?`<div style="display:flex;gap:6px;margin-top:8px">
-              <button class="btn btn-secondary" style="flex:1;font-size:11px;padding:5px" onclick="openEditBlockProfile('${b}')">✏️ Edit</button>
-              <button class="btn btn-primary" style="flex:1;font-size:11px;padding:5px" onclick="activeBlock='${b}';navigate('blocks')">View →</button>
-            </div>`:`<button class="btn btn-secondary" style="width:100%;font-size:11px;padding:5px;margin-top:8px" onclick="activeBlock='${b}';navigate('blocks')">View Block →</button>`}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
   </div>`;
 }
 
@@ -1321,13 +1253,6 @@ function taskFormHTML(t, isAdmin=true) {
         ${cats.map(c=>`<option ${c===(t?.category||'')?'selected':''}>${c}</option>`).join('')}
       </select>
     </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>🟩 Block</label>
-      <select id="t-block">
-        <option value="">— No Block —</option>
-        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}" ${('Block '+n)===(t?.block||'')?'selected':''}>Block ${n}</option>`).join('')}
-      </select>
-    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Description</label>
       <textarea id="t-desc">${esc(t?.description||'')}</textarea>
@@ -1391,7 +1316,6 @@ function saveTask(id) {
     category: document.getElementById('t-cat').value,
     description: document.getElementById('t-desc').value,
     progressNotes: document.getElementById('t-progress').value,
-    block: document.getElementById('t-block').value,
     photos: pendingTaskPhotos.filter(Boolean),
     farm: currentFarm,
     createdAt: existing?.createdAt||new Date().toISOString(),
@@ -1462,15 +1386,8 @@ function openAddReport() {
     <div class="form-row"><div class="form-group">
       <label>Date</label><input id="r-date" type="date" value="${today()}" />
     </div><div class="form-group">
-      <label>🟩 Block</label>
-      <select id="r-block">
-        <option value="">— No Block —</option>
-        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
-      </select>
+      <label>Farm Area</label><input id="r-area" placeholder="e.g. Block A, North Field" />
     </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Farm Area / Location</label><input id="r-area" placeholder="e.g. North Field, Greenhouse" />
-    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Findings *</label>
       <textarea id="r-findings" style="min-height:90px" placeholder="Describe observations..."></textarea>
@@ -1494,7 +1411,6 @@ function saveReport() {
   d.reports.push({
     id:uid(), title, type:document.getElementById('r-type').value,
     reportDate:document.getElementById('r-date').value,
-    block:document.getElementById('r-block').value,
     farmArea:document.getElementById('r-area').value,
     findings, recommendations:document.getElementById('r-recs').value,
     followUpDate:document.getElementById('r-followup').value,
@@ -1572,17 +1488,10 @@ function renderVisits(filterUser) {
 function openAddVisit() {
   openModal('Log Field Visit',`
     <div class="form-row"><div class="form-group">
-      <label>Farm Section / Location</label><input id="v-section" placeholder="e.g. North Field" />
+      <label>Farm Section *</label><input id="v-section" placeholder="e.g. Block A" />
     </div><div class="form-group">
       <label>Visit Date</label><input id="v-date" type="date" value="${today()}" />
     </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>🟩 Block</label>
-      <select id="v-block">
-        <option value="">— No Block —</option>
-        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
-      </select>
-    </div><div class="form-group"></div></div>
     <div class="form-row"><div class="form-group">
       <label>Purpose</label><input id="v-purpose" placeholder="e.g. Soil sampling" />
     </div><div class="form-group">
@@ -1607,7 +1516,6 @@ function saveVisit() {
   if(!section||!notes){alert('Section and observations are required');return;}
   d.visits.push({
     id:uid(), farmSection:section,
-    block:document.getElementById('v-block').value,
     visitDate:document.getElementById('v-date').value,
     purpose:document.getElementById('v-purpose').value,
     duration:document.getElementById('v-duration').value?document.getElementById('v-duration').value+'h':'',
@@ -1690,15 +1598,8 @@ function openAddIssue() {
       <label>Category</label>
       <select id="i-cat"><option>Structural</option><option>Irrigation</option><option>Soil</option><option>Crop</option><option>Equipment</option><option>Pest/Disease</option><option>Water</option><option>General</option></select>
     </div><div class="form-group">
-      <label>🟩 Block</label>
-      <select id="i-block">
-        <option value="">— No Block —</option>
-        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
-      </select>
+      <label>Location</label><input id="i-loc" placeholder="Farm area" />
     </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>Location / Area</label><input id="i-loc" placeholder="Farm area" />
-    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Description *</label>
       <textarea id="i-desc" style="min-height:90px" placeholder="Describe the issue..."></textarea>
@@ -1721,7 +1622,6 @@ function saveIssue(id) {
     id:id||uid(), title,
     priority:document.getElementById('i-priority').value,
     category:document.getElementById('i-cat').value,
-    block:document.getElementById('i-block').value,
     location:document.getElementById('i-loc').value,
     description:desc,
     solution:document.getElementById('i-sol').value,
@@ -1831,13 +1731,6 @@ function openAddNote() {
       <label>Tag</label>
       <select id="n-tag"><option>Note</option><option>Important</option><option>Reminder</option><option>Info</option></select>
     </div></div>
-    <div class="form-row"><div class="form-group">
-      <label>🟩 Block</label>
-      <select id="n-block">
-        <option value="">— No Block —</option>
-        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}">Block ${n}</option>`).join('')}
-      </select>
-    </div><div class="form-group"></div></div>
     <div class="form-row one"><div class="form-group">
       <label>Content *</label><textarea id="n-content" style="min-height:100px" placeholder="Write your note..."></textarea>
     </div></div>
@@ -1849,7 +1742,7 @@ function saveNote() {
   const title=document.getElementById('n-title').value.trim();
   const content=document.getElementById('n-content').value.trim();
   if(!title||!content){alert('Title and content required');return;}
-  d.notes.push({id:uid(),title,content,tag:document.getElementById('n-tag').value,block:document.getElementById('n-block').value,author:currentUser,createdAt:new Date().toISOString()});
+  d.notes.push({id:uid(),title,content,tag:document.getElementById('n-tag').value,author:currentUser,createdAt:new Date().toISOString()});
   saveFarmData(currentFarm, d); closeModal(); navigate('notes');
 }
 function deleteNote(id) {
@@ -1865,7 +1758,8 @@ async function renderTeam() {
   const farm = FARMS[currentFarm];
   // Load login stats from Firebase
   try {
-    if (db) { const snap = await db.ref('loginStats').once('value'); _loginStats = snap.val() || {}; }
+    const snap = await db.ref('loginStats').once('value');
+    _loginStats = snap.val() || {};
   } catch(e) { _loginStats = {}; }
 
   document.getElementById('main-content').innerHTML = `
@@ -1952,347 +1846,6 @@ function fmtMonth(m) {
 function costVal(rec, fid, type) { return parseFloat(rec?.[type+'_'+fid])||0; }
 function costTotalType(rec, type) { return COST_FIELDS.reduce((s,f)=>s+costVal(rec,f.id,type),0); }
 function costTotal(rec) { return costTotalType(rec,'act'); } // actual is primary total
-
-// ====================== BLOCKS ======================
-const BLOCK_COLORS = ['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d','#6b4226','#5c6bc0','#c07c2a','#4a7c59','#7b2d8b'];
-
-let activeBlock = null; // null = overview, 'Block 1' = detail
-
-function openEditBlock(b) { openEditBlockProfile(b); }
-
-function previewBlockPhoto(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('bl-photo-data').value = ev.target.result;
-    document.getElementById('bl-photo-preview').innerHTML =
-      `<img src="${ev.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px" />`;
-  };
-  reader.readAsDataURL(file);
-}
-
-function saveBlockInfo(b, returnTo) {
-  const d = getFarmData(currentFarm);
-  d.blockInfo = d.blockInfo || {};
-  d.blockInfo[b] = {
-    width:      document.getElementById('bl-w').value,
-    height:     document.getElementById('bl-h').value,
-    photo:      document.getElementById('bl-photo-data').value,
-    irrigation: document.getElementById('bl-irr')?.value || (d.blockInfo[b]?.irrigation||''),
-    crop:       document.getElementById('bl-crop')?.value || (d.blockInfo[b]?.crop||''),
-    notes:      document.getElementById('bl-notes')?.value || (d.blockInfo[b]?.notes||''),
-  };
-  saveFarmData(currentFarm, d);
-  closeModal();
-  navigate(returnTo || 'blocks');
-}
-
-function openEditBlockProfile(b) {
-  const d = getFarmData(currentFarm);
-  const info = (d.blockInfo||{})[b] || {};
-  openModal(`✏️ Edit ${b}`, `
-    <div class="form-row">
-      <div class="form-group"><label>📐 Width (m)</label>
-        <input id="bl-w" type="number" min="0" step="0.1" value="${esc(info.width||'')}" placeholder="Width" /></div>
-      <div class="form-group"><label>📐 Length (m)</label>
-        <input id="bl-h" type="number" min="0" step="0.1" value="${esc(info.height||'')}" placeholder="Length" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>💧 Irrigation System</label>
-        <select id="bl-irr">
-          <option value="">— Select —</option>
-          ${['Drip','Sprinkler','Flood','Subsurface Drip','Manual','Mixed'].map(v=>`<option value="${v}" ${v===(info.irrigation||'')?'selected':''}>${v}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group"><label>🌱 Crop / Plant Type</label>
-        <input id="bl-crop" value="${esc(info.crop||'')}" placeholder="e.g. Mango, Tomato, Dates" />
-      </div>
-    </div>
-    <div class="form-group"><label>📝 Notes</label>
-      <textarea id="bl-notes" style="min-height:60px" placeholder="Any notes about this block...">${esc(info.notes||'')}</textarea>
-    </div>
-    <div class="form-group" style="margin-top:8px">
-      <label>📷 Block Photo</label>
-      ${info.photo?`<img src="${info.photo}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`:''}
-      <div class="task-photo-upload" onclick="document.getElementById('bl-photo-input').click()" style="margin-top:4px">
-        <input type="file" id="bl-photo-input" accept="image/*" onchange="previewBlockPhoto(event)" style="display:none" />
-        <div class="upload-icon">📷</div><p>${info.photo?'Replace photo':'Upload photo'}</p>
-      </div>
-      <div id="bl-photo-preview"></div>
-    </div>
-    <input type="hidden" id="bl-photo-data" value="${info.photo||''}" />
-  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveBlockInfo('${b}','farm-profile')">Save</button>`);
-}
-
-// ====================== BLOCK COSTS ======================
-const BLOCK_COST_CATS = [
-  { id:'labor',      label:'Labor',         icon:'👷', color:'#1d3557' },
-  { id:'seeds',      label:'Seeds',         icon:'🌱', color:'#2d6a4f' },
-  { id:'pesticides', label:'Pesticides',    icon:'🧪', color:'#8b2252' },
-  { id:'nutrition',  label:'Nutrition',     icon:'🌿', color:'#6b4226' },
-  { id:'irrigation', label:'Irrigation',    icon:'💧', color:'#457b9d' },
-  { id:'equipment',  label:'Equipment',     icon:'🔧', color:'#e07b39' },
-  { id:'other',      label:'Other',         icon:'📦', color:'#7b2d8b' },
-];
-
-function openAddBlockCost(block) {
-  openModal(`💰 Add Cost — ${block}`,`
-    <div class="form-row">
-      <div class="form-group"><label>Date *</label>
-        <input id="bc-date" type="date" value="${today()}" /></div>
-      <div class="form-group"><label>Category *</label>
-        <select id="bc-cat">
-          ${BLOCK_COST_CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Amount (AED) *</label>
-        <input id="bc-amount" type="number" min="0" step="0.01" placeholder="0.00" /></div>
-      <div class="form-group"><label>Description</label>
-        <input id="bc-desc" placeholder="e.g. Fertilizer purchase" /></div>
-    </div>
-  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveBlockCost('${block}')">Add Cost</button>`);
-}
-
-function saveBlockCost(block) {
-  const d = getFarmData(currentFarm);
-  const amount = parseFloat(document.getElementById('bc-amount').value);
-  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
-  d.blockCosts = d.blockCosts || [];
-  d.blockCosts.push({
-    id: uid(), block,
-    date: document.getElementById('bc-date').value,
-    category: document.getElementById('bc-cat').value,
-    amount, description: document.getElementById('bc-desc').value,
-    author: currentUser, createdAt: new Date().toISOString(),
-  });
-  saveFarmData(currentFarm, d);
-  closeModal();
-  navigate('blocks');
-}
-
-function deleteBlockCost(id) {
-  if (!confirm('Delete this cost entry?')) return;
-  const d = getFarmData(currentFarm);
-  d.blockCosts = (d.blockCosts||[]).filter(x=>x.id!==id);
-  saveFarmData(currentFarm, d);
-  navigate('blocks');
-}
-
-function blockCostTotal(costs, block, month) {
-  return (costs||[])
-    .filter(c => c.block===block && (!month || c.date?.startsWith(month)))
-    .reduce((s,c)=>s+parseFloat(c.amount||0),0);
-}
-
-function renderBlockCostSection(d, b, color) {
-  const costs = (d.blockCosts||[]).filter(c=>c.block===b).sort((a,x)=>new Date(x.date)-new Date(a.date));
-  const thisM = currentMonth();
-  const totalAll  = costs.reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const totalMonth= costs.filter(c=>c.date?.startsWith(thisM)).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const isAdmin = currentUser === 'admin';
-  const byCat = {};
-  costs.forEach(c=>{ byCat[c.category]=(byCat[c.category]||0)+parseFloat(c.amount||0); });
-
-  return `
-  <div class="card" style="margin-bottom:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;color:${color}">💰 Block Costs</h3>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:12px;background:#f0f4ff;padding:4px 10px;border-radius:20px">📅 This month: <strong>${totalMonth.toLocaleString()} AED</strong></span>
-        <span style="font-size:12px;background:#f0fff4;padding:4px 10px;border-radius:20px">📊 All time: <strong>${totalAll.toLocaleString()} AED</strong></span>
-        <button class="btn btn-primary btn-sm" onclick="openAddBlockCost('${b}')">+ Add Cost</button>
-      </div>
-    </div>
-    ${Object.keys(byCat).length ? `
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      ${BLOCK_COST_CATS.filter(c=>byCat[c.id]).map(c=>`
-        <span style="background:${c.color}18;color:${c.color};border:1px solid ${c.color}33;border-radius:20px;padding:3px 10px;font-size:12px">
-          ${c.icon} ${c.label}: <strong>${byCat[c.id].toLocaleString()} AED</strong>
-        </span>`).join('')}
-    </div>` : ''}
-    ${costs.length === 0 ? `<div class="empty" style="padding:20px 0"><div class="empty-icon">💰</div><p>No costs added yet</p></div>` : `
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#f8f9fa">
-          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Date</th>
-          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Category</th>
-          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">Description</th>
-          <th style="padding:8px 10px;text-align:right;border-bottom:2px solid #e9ecef">Amount</th>
-          <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #e9ecef">By</th>
-          ${isAdmin?'<th style="padding:8px 10px;border-bottom:2px solid #e9ecef"></th>':''}
-        </tr></thead>
-        <tbody>
-          ${costs.map(c=>{
-            const cat = BLOCK_COST_CATS.find(x=>x.id===c.category)||{icon:'📦',label:c.category,color:'#666'};
-            return `<tr style="border-bottom:1px solid #f0f0f0">
-              <td style="padding:8px 10px">${fmt(c.date)}</td>
-              <td style="padding:8px 10px"><span style="color:${cat.color}">${cat.icon} ${cat.label}</span></td>
-              <td style="padding:8px 10px;color:var(--gray)">${esc(c.description||'—')}</td>
-              <td style="padding:8px 10px;text-align:right;font-weight:700;color:${color}">${parseFloat(c.amount).toLocaleString()} AED</td>
-              <td style="padding:8px 10px;font-size:11px;color:var(--gray)">${USERS[c.author]?.name||c.author}</td>
-              ${isAdmin?`<td style="padding:8px 10px"><button class="btn btn-secondary btn-sm" style="color:#d62828;font-size:11px" onclick="deleteBlockCost('${c.id}')">✕</button></td>`:''}
-            </tr>`;
-          }).join('')}
-          <tr style="background:#f0f4f0;font-weight:700;border-top:2px solid #dee2e6">
-            <td colspan="${isAdmin?4:3}" style="padding:8px 10px">Total</td>
-            <td style="padding:8px 10px;text-align:right;color:${color}">${totalAll.toLocaleString()} AED</td>
-            <td colspan="${isAdmin?2:1}"></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`}
-  </div>`;
-}
-
-function renderBlocks() {
-  const d = getFarmData(currentFarm);
-  const farm = FARMS[currentFarm];
-  const blockInfo = d.blockInfo || {};
-  const isAdmin = currentUser === 'admin';
-
-  if (activeBlock) {
-    const b = activeBlock;
-    const info    = blockInfo[b] || {};
-    const tasks   = (d.tasks||[]).filter(x=>x.block===b);
-    const reports = (d.reports||[]).filter(x=>x.block===b);
-    const visits  = (d.visits||[]).filter(x=>x.block===b);
-    const issues  = (d.issues||[]).filter(x=>x.block===b);
-    const notes   = (d.notes||[]).filter(x=>x.block===b);
-    const bIdx = parseInt(b.split(' ')[1]) - 1;
-    const color = BLOCK_COLORS[bIdx] || '#2d6a4f';
-    const area = (info.width && info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(1)+' m²' : null;
-    return `
-    <div class="card" style="margin-bottom:14px;border-left:5px solid ${color}">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="activeBlock=null;navigate('blocks')" style="padding:6px 14px">← Back</button>
-        <h2 style="margin:0;color:${color};flex:1">🟩 ${b} — ${farm.name}</h2>
-        ${isAdmin?`<button class="btn btn-primary" style="padding:6px 14px" onclick="openEditBlock('${b}')">✏️ Edit Info</button>`:''}
-      </div>
-      ${info.photo||info.width?`
-      <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;align-items:flex-start">
-        ${info.photo?`<img src="${info.photo}" style="width:220px;max-width:100%;height:140px;object-fit:cover;border-radius:10px;box-shadow:var(--shadow)" />`:''}
-        ${info.width||info.height?`
-        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
-          <div style="font-size:13px;color:var(--gray)">📐 Dimensions</div>
-          <div style="font-size:22px;font-weight:800;color:${color}">${info.width||'?'} × ${info.height||'?'} m</div>
-          ${area?`<div style="font-size:14px;color:var(--gray)">Total area: <strong>${area}</strong></div>`:''}
-        </div>`:''}
-      </div>`:''}
-    </div>
-    <div class="stats-grid" style="margin-bottom:18px">
-      <div class="stat-card green"><div class="icon">✅</div><div class="label">Tasks</div><div class="value">${tasks.length}</div></div>
-      <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${reports.length}</div></div>
-      <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Visits</div><div class="value">${visits.length}</div></div>
-      <div class="stat-card purple"><div class="icon">⚠️</div><div class="label">Issues</div><div class="value">${issues.length}</div></div>
-    </div>
-
-    ${renderBlockCostSection(d, b, color)}
-
-    ${tasks.length ? `
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="margin-bottom:12px">✅ Tasks</h3>
-      ${tasks.map(t=>`
-      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px;border-left:4px solid ${t.priority==='High'?'#d62828':t.priority==='Medium'?'#f4a261':'#aaa'}">
-        <div style="font-weight:700">${esc(t.title)}</div>
-        <div style="font-size:12px;color:var(--gray)">${USERS[t.assignee]?.name||t.assignee} · ${t.status} · Due ${fmt(t.dueDate)}</div>
-        ${t.description?`<div style="font-size:12px;margin-top:4px">${esc(t.description)}</div>`:''}
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${reports.length ? `
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="margin-bottom:12px">📋 Reports</h3>
-      ${reports.map(r=>`
-      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px">
-        <div style="font-weight:700">${esc(r.title)}</div>
-        <div style="font-size:12px;color:var(--gray)">${USERS[r.author]?.name||r.author} · ${fmt(r.reportDate)} · ${r.type}</div>
-        ${r.findings?`<div style="font-size:12px;margin-top:4px">${esc(r.findings)}</div>`:''}
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${visits.length ? `
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="margin-bottom:12px">🚜 Visits</h3>
-      ${visits.map(v=>`
-      <div style="padding:10px;border-radius:8px;background:#f8f9fa;margin-bottom:8px">
-        <div style="font-weight:700">${esc(v.farmSection||v.purpose||'Visit')}</div>
-        <div style="font-size:12px;color:var(--gray)">${USERS[v.author]?.name||v.author} · ${fmt(v.visitDate)}${v.duration?' · '+v.duration:''}</div>
-        ${v.notes?`<div style="font-size:12px;margin-top:4px">${esc(v.notes)}</div>`:''}
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${issues.length ? `
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="margin-bottom:12px">⚠️ Issues</h3>
-      ${issues.map(i=>`
-      <div style="padding:10px;border-radius:8px;background:#fff5f5;margin-bottom:8px;border-left:4px solid ${i.priority==='High'?'#d62828':'#f4a261'}">
-        <div style="font-weight:700">${esc(i.title)}</div>
-        <div style="font-size:12px;color:var(--gray)">${USERS[i.author]?.name||i.author} · ${i.status} · ${i.category}</div>
-        ${i.description?`<div style="font-size:12px;margin-top:4px">${esc(i.description)}</div>`:''}
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${notes.length ? `
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="margin-bottom:12px">📝 Notes</h3>
-      ${notes.map(n=>`
-      <div style="padding:10px;border-radius:8px;background:#fffbf0;margin-bottom:8px">
-        <div style="font-weight:700">${esc(n.title)}</div>
-        <div style="font-size:12px;color:var(--gray)">${USERS[n.author]?.name||n.author} · ${timeAgo(n.createdAt)}</div>
-        ${n.content?`<div style="font-size:12px;margin-top:4px">${esc(n.content)}</div>`:''}
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${!tasks.length&&!reports.length&&!visits.length&&!issues.length&&!notes.length ? `
-    <div class="card"><div class="empty"><div class="empty-icon">🟩</div><p>No data in ${b} yet.<br>Add tasks, reports, visits, issues or notes and assign them to ${b}.</p></div></div>` : ''}
-    `;
-  }
-
-  // Overview — 10 block cards
-  return `
-  <div class="card" style="margin-bottom:18px">
-    <h2>🟩 Farm Blocks — ${farm.name}</h2>
-    <p style="color:var(--gray);font-size:13px">Click a block to view its data. Admin can set size and photo for each block.</p>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px">
-    ${[1,2,3,4,5,6,7,8,9,10].map(n => {
-      const b = 'Block ' + n;
-      const color = BLOCK_COLORS[n-1];
-      const info  = blockInfo[b] || {};
-      const tasks   = (d.tasks||[]).filter(x=>x.block===b).length;
-      const reports = (d.reports||[]).filter(x=>x.block===b).length;
-      const visits  = (d.visits||[]).filter(x=>x.block===b).length;
-      const issues  = (d.issues||[]).filter(x=>x.block===b).length;
-      const notes   = (d.notes||[]).filter(x=>x.block===b).length;
-      const total   = tasks+reports+visits+issues+notes;
-      const area    = (info.width&&info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(1)+' m²' : null;
-      return `
-      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);border-top:5px solid ${color};overflow:hidden;cursor:pointer;transition:transform .15s"
-           onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-        ${info.photo?`<img src="${info.photo}" style="width:100%;height:100px;object-fit:cover" onclick="activeBlock='${b}';navigate('blocks')" />`
-          :`<div style="height:60px;background:linear-gradient(135deg,${color}22,${color}44);display:flex;align-items:center;justify-content:center;font-size:28px" onclick="activeBlock='${b}';navigate('blocks')">🟩</div>`}
-        <div style="padding:12px" onclick="activeBlock='${b}';navigate('blocks')">
-          <div style="font-weight:800;font-size:15px;color:${color};margin-bottom:4px">${b}</div>
-          ${area?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">📐 ${info.width}×${info.height}m · ${area}</div>`:
-            `<div style="font-size:11px;color:#bbb;margin-bottom:6px">No size set</div>`}
-          <div style="font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:3px;text-align:center">
-            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${tasks}</strong> Tasks</div>
-            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${reports}</strong> Rep.</div>
-            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${visits}</strong> Visits</div>
-            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${issues}</strong> Issues</div>
-          </div>
-        </div>
-        ${isAdmin?`<div style="padding:0 12px 10px">
-          <button class="btn btn-secondary" style="width:100%;font-size:11px;padding:5px" onclick="event.stopPropagation();openEditBlock('${b}')">✏️ Edit Size & Photo</button>
-        </div>`:''}
-      </div>`;
-    }).join('')}
-  </div>`;
-}
 
 function renderFarmCosts() {
   const d = getFarmData(currentFarm);
@@ -2407,64 +1960,6 @@ function renderFarmCosts() {
         </tr></tfoot>`:''}
       </table>
     </div>
-  </div>
-
-  ${renderAllBlocksCostSummary(d)}`;
-}
-
-function renderAllBlocksCostSummary(d) {
-  const blockCosts = d.blockCosts || [];
-  if (blockCosts.length === 0) return '';
-  const thisM = currentMonth();
-  const rows = [1,2,3,4,5,6,7,8,9,10].map(n => {
-    const b = 'Block ' + n;
-    const allTime = blockCosts.filter(c=>c.block===b).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-    const month   = blockCosts.filter(c=>c.block===b&&c.date?.startsWith(thisM)).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-    const byCat   = {};
-    blockCosts.filter(c=>c.block===b).forEach(c=>{ byCat[c.category]=(byCat[c.category]||0)+parseFloat(c.amount||0); });
-    return { b, allTime, month, byCat };
-  }).filter(r=>r.allTime>0);
-  if (!rows.length) return '';
-  const grandMonth   = rows.reduce((s,r)=>s+r.month,0);
-  const grandAllTime = rows.reduce((s,r)=>s+r.allTime,0);
-  return `
-  <div class="card" style="margin-top:18px">
-    <h2>🟩 Block-Level Costs — ${FARMS[currentFarm].name}</h2>
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <span style="background:#f0f4ff;padding:6px 14px;border-radius:20px;font-size:13px">📅 This month: <strong>${grandMonth.toLocaleString()} AED</strong></span>
-      <span style="background:#f0fff4;padding:6px 14px;border-radius:20px;font-size:13px">📊 All-time: <strong>${grandAllTime.toLocaleString()} AED</strong></span>
-    </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#f8f9fa">
-          <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #e9ecef">Block</th>
-          ${BLOCK_COST_CATS.map(c=>`<th style="padding:9px 8px;text-align:right;border-bottom:2px solid #e9ecef;color:${c.color}">${c.icon}<br><small>${c.label}</small></th>`).join('')}
-          <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#457b9d">This Month</th>
-          <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #e9ecef;color:#2d6a4f">All Time</th>
-        </tr></thead>
-        <tbody>
-          ${rows.map(r=>{
-            const color = BLOCK_COLORS[parseInt(r.b.split(' ')[1])-1];
-            return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="activeBlock='${r.b}';navigate('blocks')" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
-              <td style="padding:9px 12px;font-weight:700;color:${color}">🟩 ${r.b}</td>
-              ${BLOCK_COST_CATS.map(c=>`<td style="padding:9px 8px;text-align:right;font-size:12px;color:${c.color}">${r.byCat[c.id]?r.byCat[c.id].toLocaleString():''}</td>`).join('')}
-              <td style="padding:9px 12px;text-align:right;font-weight:600;color:#457b9d">${r.month?r.month.toLocaleString()+' AED':'—'}</td>
-              <td style="padding:9px 12px;text-align:right;font-weight:700;color:#2d6a4f">${r.allTime.toLocaleString()} AED</td>
-            </tr>`;
-          }).join('')}
-          <tr style="background:#f0f4f0;font-weight:700;border-top:2px solid #dee2e6">
-            <td style="padding:9px 12px">Total</td>
-            ${BLOCK_COST_CATS.map(c=>{
-              const t=rows.reduce((s,r)=>s+(r.byCat[c.id]||0),0);
-              return `<td style="padding:9px 8px;text-align:right;font-size:12px;color:${c.color}">${t?t.toLocaleString():''}</td>`;
-            }).join('')}
-            <td style="padding:9px 12px;text-align:right;color:#457b9d">${grandMonth.toLocaleString()} AED</td>
-            <td style="padding:9px 12px;text-align:right;color:#2d6a4f">${grandAllTime.toLocaleString()} AED</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="font-size:11px;color:var(--gray);margin-top:8px">Click any row to open that block's cost detail</p>
   </div>`;
 }
 
@@ -2861,12 +2356,7 @@ function openAddPlantHealth(existingId) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Plant Type / Crop</label><input id="ph-plant" value="${esc(ex?.plantType||'')}" placeholder="e.g. Mango, Tomato" /></div>
-      <div class="form-group"><label>🟩 Block</label>
-        <select id="ph-loc">
-          <option value="">— No Block —</option>
-          ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="Block ${n}" ${'Block '+n===(ex?.location||'')?'selected':''}>Block ${n}</option>`).join('')}
-        </select>
-      </div>
+      <div class="form-group"><label>Location / Block</label><input id="ph-loc" value="${esc(ex?.location||'')}" placeholder="e.g. Block C" /></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Severity</label>
