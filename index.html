@@ -1899,12 +1899,67 @@ const BLOCK_COLORS = ['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d','#6b4226
 
 let activeBlock = null; // null = overview, 'Block 1' = detail
 
+function openEditBlock(b) {
+  const d = getFarmData(currentFarm);
+  const info = (d.blockInfo||{})[b] || {};
+  openModal(`Edit ${b} Info`, `
+    <div class="form-group">
+      <label>📐 Size (meters)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="bl-w" type="number" min="0" step="0.1" placeholder="Width" value="${esc(info.width||'')}" style="flex:1" />
+        <span style="color:var(--gray)">×</span>
+        <input id="bl-h" type="number" min="0" step="0.1" placeholder="Length" value="${esc(info.height||'')}" style="flex:1" />
+        <span style="color:var(--gray);font-size:12px">m</span>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label>📷 Block Photo</label>
+      ${info.photo?`<img src="${info.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:8px" />`:''}
+      <div class="task-photo-upload" onclick="document.getElementById('bl-photo-input').click()" style="margin-top:4px">
+        <input type="file" id="bl-photo-input" accept="image/*" onchange="previewBlockPhoto(event)" style="display:none" />
+        <div class="upload-icon">📷</div>
+        <p>${info.photo?'Replace photo':'Upload photo'}</p>
+      </div>
+      <div id="bl-photo-preview"></div>
+    </div>
+    <input type="hidden" id="bl-photo-data" value="${info.photo||''}" />
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveBlockInfo('${b}')">Save</button>`);
+}
+
+function previewBlockPhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('bl-photo-data').value = ev.target.result;
+    document.getElementById('bl-photo-preview').innerHTML =
+      `<img src="${ev.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px" />`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveBlockInfo(b) {
+  const d = getFarmData(currentFarm);
+  d.blockInfo = d.blockInfo || {};
+  d.blockInfo[b] = {
+    width:  document.getElementById('bl-w').value,
+    height: document.getElementById('bl-h').value,
+    photo:  document.getElementById('bl-photo-data').value,
+  };
+  saveFarmData(currentFarm, d);
+  closeModal();
+  navigate('blocks');
+}
+
 function renderBlocks() {
   const d = getFarmData(currentFarm);
   const farm = FARMS[currentFarm];
+  const blockInfo = d.blockInfo || {};
+  const isAdmin = currentUser === 'admin';
 
   if (activeBlock) {
     const b = activeBlock;
+    const info    = blockInfo[b] || {};
     const tasks   = (d.tasks||[]).filter(x=>x.block===b);
     const reports = (d.reports||[]).filter(x=>x.block===b);
     const visits  = (d.visits||[]).filter(x=>x.block===b);
@@ -1912,12 +1967,24 @@ function renderBlocks() {
     const notes   = (d.notes||[]).filter(x=>x.block===b);
     const bIdx = parseInt(b.split(' ')[1]) - 1;
     const color = BLOCK_COLORS[bIdx] || '#2d6a4f';
+    const area = (info.width && info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(1)+' m²' : null;
     return `
     <div class="card" style="margin-bottom:14px;border-left:5px solid ${color}">
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <button class="btn btn-secondary" onclick="activeBlock=null;navigate('blocks')" style="padding:6px 14px">← Back</button>
-        <h2 style="margin:0;color:${color}">🟩 ${b} — ${farm.name}</h2>
+        <h2 style="margin:0;color:${color};flex:1">🟩 ${b} — ${farm.name}</h2>
+        ${isAdmin?`<button class="btn btn-primary" style="padding:6px 14px" onclick="openEditBlock('${b}')">✏️ Edit Info</button>`:''}
       </div>
+      ${info.photo||info.width?`
+      <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;align-items:flex-start">
+        ${info.photo?`<img src="${info.photo}" style="width:220px;max-width:100%;height:140px;object-fit:cover;border-radius:10px;box-shadow:var(--shadow)" />`:''}
+        ${info.width||info.height?`
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <div style="font-size:13px;color:var(--gray)">📐 Dimensions</div>
+          <div style="font-size:22px;font-weight:800;color:${color}">${info.width||'?'} × ${info.height||'?'} m</div>
+          ${area?`<div style="font-size:14px;color:var(--gray)">Total area: <strong>${area}</strong></div>`:''}
+        </div>`:''}
+      </div>`:''}
     </div>
     <div class="stats-grid" style="margin-bottom:18px">
       <div class="stat-card green"><div class="icon">✅</div><div class="label">Tasks</div><div class="value">${tasks.length}</div></div>
@@ -1990,31 +2057,39 @@ function renderBlocks() {
   return `
   <div class="card" style="margin-bottom:18px">
     <h2>🟩 Farm Blocks — ${farm.name}</h2>
-    <p style="color:var(--gray);font-size:13px">Each block collects tasks, reports, visits, issues and notes assigned to it. Click a block to view its data.</p>
+    <p style="color:var(--gray);font-size:13px">Click a block to view its data. Admin can set size and photo for each block.</p>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px">
     ${[1,2,3,4,5,6,7,8,9,10].map(n => {
       const b = 'Block ' + n;
       const color = BLOCK_COLORS[n-1];
+      const info  = blockInfo[b] || {};
       const tasks   = (d.tasks||[]).filter(x=>x.block===b).length;
       const reports = (d.reports||[]).filter(x=>x.block===b).length;
       const visits  = (d.visits||[]).filter(x=>x.block===b).length;
       const issues  = (d.issues||[]).filter(x=>x.block===b).length;
       const notes   = (d.notes||[]).filter(x=>x.block===b).length;
       const total   = tasks+reports+visits+issues+notes;
+      const area    = (info.width&&info.height) ? (parseFloat(info.width)*parseFloat(info.height)).toFixed(1)+' m²' : null;
       return `
-      <div onclick="activeBlock='${b}';navigate('blocks')"
-           style="background:#fff;border-radius:12px;padding:18px;box-shadow:var(--shadow);border-top:5px solid ${color};cursor:pointer;transition:transform .15s"
+      <div style="background:#fff;border-radius:12px;box-shadow:var(--shadow);border-top:5px solid ${color};overflow:hidden;cursor:pointer;transition:transform .15s"
            onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-        <div style="font-size:28px;text-align:center;margin-bottom:6px">🟩</div>
-        <div style="font-weight:800;font-size:16px;text-align:center;color:${color};margin-bottom:10px">${b}</div>
-        <div style="font-size:12px;color:var(--gray);display:grid;grid-template-columns:1fr 1fr;gap:4px;text-align:center">
-          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${tasks}</strong><br>Tasks</div>
-          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${reports}</strong><br>Reports</div>
-          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${visits}</strong><br>Visits</div>
-          <div style="background:#f8f9fa;border-radius:6px;padding:5px"><strong style="color:${color}">${issues}</strong><br>Issues</div>
+        ${info.photo?`<img src="${info.photo}" style="width:100%;height:100px;object-fit:cover" onclick="activeBlock='${b}';navigate('blocks')" />`
+          :`<div style="height:60px;background:linear-gradient(135deg,${color}22,${color}44);display:flex;align-items:center;justify-content:center;font-size:28px" onclick="activeBlock='${b}';navigate('blocks')">🟩</div>`}
+        <div style="padding:12px" onclick="activeBlock='${b}';navigate('blocks')">
+          <div style="font-weight:800;font-size:15px;color:${color};margin-bottom:4px">${b}</div>
+          ${area?`<div style="font-size:11px;color:var(--gray);margin-bottom:6px">📐 ${info.width}×${info.height}m · ${area}</div>`:
+            `<div style="font-size:11px;color:#bbb;margin-bottom:6px">No size set</div>`}
+          <div style="font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:3px;text-align:center">
+            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${tasks}</strong> Tasks</div>
+            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${reports}</strong> Rep.</div>
+            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${visits}</strong> Visits</div>
+            <div style="background:#f8f9fa;border-radius:5px;padding:4px"><strong style="color:${color}">${issues}</strong> Issues</div>
+          </div>
         </div>
-        ${total===0?'<div style="text-align:center;font-size:11px;color:#bbb;margin-top:8px">No data yet</div>':'<div style="text-align:center;font-size:11px;color:'+color+';margin-top:8px;font-weight:600">'+total+' record'+(total!==1?'s':'')+'</div>'}
+        ${isAdmin?`<div style="padding:0 12px 10px">
+          <button class="btn btn-secondary" style="width:100%;font-size:11px;padding:5px" onclick="event.stopPropagation();openEditBlock('${b}')">✏️ Edit Size & Photo</button>
+        </div>`:''}
       </div>`;
     }).join('')}
   </div>`;
