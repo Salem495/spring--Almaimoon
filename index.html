@@ -485,6 +485,13 @@ async function doLogin() {
   try {
     await loadAllFarmsFromDB();
   } catch(e) { console.warn('Firebase load failed, using cache', e); }
+  // Track login stats
+  try {
+    const ref = db.ref('loginStats/' + u);
+    const snap = await ref.once('value');
+    const prev = snap.val() || { count: 0 };
+    await ref.set({ count: (prev.count || 0) + 1, lastLogin: new Date().toISOString() });
+  } catch(e) { console.warn('Login stats error', e); }
   currentUser = u;
   save('farm_session', u);
   btn.textContent = 'Login'; btn.disabled = false;
@@ -634,7 +641,7 @@ function navigate(page) {
   else if (page === 'visits')   main.innerHTML = renderVisits(isAdmin ? null : currentUser);
   else if (page === 'issues')   main.innerHTML = renderIssues(isAdmin ? null : currentUser);
   else if (page === 'notes')        main.innerHTML = renderNotes(isAdmin ? null : currentUser);
-  else if (page === 'team')         main.innerHTML = renderTeam();
+  else if (page === 'team')         { main.innerHTML = '<div class="card"><p style="color:var(--gray)">Loading team data…</p></div>'; renderTeam(); }
   else if (page === 'soil-tests')   main.innerHTML = renderSoilTests();
   else if (page === 'plant-health') main.innerHTML = renderPlantHealth();
   else if (page === 'irr-repairs')  main.innerHTML = renderIrrRepairs();
@@ -1745,13 +1752,20 @@ function deleteNote(id) {
 }
 
 // ====================== TEAM (ADMIN) ======================
-function renderTeam() {
+let _loginStats = {};
+async function renderTeam() {
   const d = getFarmData(currentFarm);
   const farm = FARMS[currentFarm];
-  return `
+  // Load login stats from Firebase
+  try {
+    const snap = await db.ref('loginStats').once('value');
+    _loginStats = snap.val() || {};
+  } catch(e) { _loginStats = {}; }
+
+  document.getElementById('main-content').innerHTML = `
   <div class="card" style="margin-bottom:18px">
     <h2>👥 Team Overview — ${farm.name}</h2>
-    <p style="color:var(--gray);font-size:13px">Data shown is for the currently selected farm.</p>
+    <p style="color:var(--gray);font-size:13px">Task data shown is for the currently selected farm.</p>
   </div>
   <div class="stats-grid">
     ${Object.keys(USERS).filter(k=>k!=='admin').map(k => {
@@ -1762,6 +1776,9 @@ function renderTeam() {
       const reports=d.reports.filter(r=>r.author===k).length;
       const visits=d.visits.filter(v=>v.author===k).length;
       const pct=myTasks.length?Math.round(done/myTasks.length*100):0;
+      const stats=_loginStats[k]||{};
+      const loginCount=stats.count||0;
+      const lastLogin=stats.lastLogin ? new Date(stats.lastLogin).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Never';
       return `
       <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
@@ -1781,10 +1798,20 @@ function renderTeam() {
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:12px">Completion</span><span style="font-size:12px;font-weight:700">${pct}%</span>
         </div>
-        <div style="background:#e8f0e8;border-radius:10px;height:7px">
+        <div style="background:#e8f0e8;border-radius:10px;height:7px;margin-bottom:12px">
           <div style="background:${u.color};width:${pct}%;height:7px;border-radius:10px"></div>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="openAssignTask('${k}')">+ Assign Task</button>
+        <div style="background:#f0f4ff;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="color:var(--gray)">🔐 Total Logins</span>
+            <strong style="color:#1d3557">${loginCount} time${loginCount!==1?'s':''}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--gray)">🕐 Last Login</span>
+            <strong style="color:#1d3557;font-size:11px">${lastLogin}</strong>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:2px" onclick="openAssignTask('${k}')">+ Assign Task</button>
       </div>`;
     }).join('')}
   </div>`;
