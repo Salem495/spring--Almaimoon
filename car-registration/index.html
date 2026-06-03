@@ -185,6 +185,7 @@ tr.clickable { cursor: pointer; }
     </div>
     <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
     <div id="loginError" style="color:#e74c3c;font-size:13px;margin-top:12px;text-align:center;display:none"></div>
+    <p style="margin-top:16px;font-size:11px;color:#aaa;text-align:center">Admin: admin123 &nbsp;|&nbsp; Staff: staff123 &nbsp;|&nbsp; Viewer: view123</p>
   </div>
 </div>
 
@@ -510,8 +511,8 @@ function loadScript(src) {
 
 async function initFirebase() {
   try {
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     console.log('Firebase connected');
