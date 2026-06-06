@@ -1,3 +1,6 @@
+[build]
+  publish = "."
+
 [[redirects]]
   from = "/car-registration"
   to = "/car-registration/index.html"
