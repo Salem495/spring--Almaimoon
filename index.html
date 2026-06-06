@@ -421,7 +421,6 @@ async function loadAllFarmsFromDB() {
       farmCache[fid][k] = farmCache[fid][k] || [];
     });
     if (!Array.isArray(farmCache[fid].photos)) farmCache[fid].photos = ['','',''];
-    if (!farmCache[fid].blocks) farmCache[fid].blocks = Array.from({length:5},(_,i)=>({name:'Block '+(i+1),size:'',crop:'',irrigation:'',photo:''}));
   });
 }
 
@@ -750,26 +749,6 @@ function renderFarmProfile() {
     <div class="stat-card blue"><div class="icon">📋</div><div class="label">Reports</div><div class="value">${(d.reports||[]).length}</div></div>
     <div class="stat-card orange"><div class="icon">🚜</div><div class="label">Field Visits</div><div class="value">${(d.visits||[]).length}</div></div>
     <div class="stat-card red"><div class="icon">⚠️</div><div class="label">Open Issues</div><div class="value">${(d.issues||[]).filter(i=>i.status!=='Resolved').length}</div></div>
-  </div>
-
-  <div class="card">
-    <h2>🗂️ Farm Blocks</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:12px">
-      ${(d.blocks||[]).map((bl,i) => `
-        <div style="background:#f8fdf8;border-radius:12px;border:2px solid ${['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d'][i]}33;overflow:hidden">
-          <div style="background:${['#2d6a4f','#1d3557','#8b2252','#e07b39','#457b9d'][i]};color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center">
-            <strong>${esc(bl.name||'Block '+(i+1))}</strong>
-            ${isAdmin ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none;padding:3px 10px" onclick="openEditBlock(${i})">Edit</button>` : ''}
-          </div>
-          ${bl.photo ? `<img src="${bl.photo}" style="width:100%;height:120px;object-fit:cover;cursor:pointer" onclick="openLightboxSrc('${bl.photo}')" />` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px">No photo</div>`}
-          <div style="padding:10px 14px;font-size:12px;display:flex;flex-direction:column;gap:4px">
-            ${bl.size ? `<div>📐 <strong>Size:</strong> ${esc(bl.size)} m²</div>` : ''}
-            ${bl.crop ? `<div>🌾 <strong>Crop:</strong> ${esc(bl.crop)}</div>` : ''}
-            ${bl.irrigation ? `<div>💧 <strong>Irrigation:</strong> ${esc(bl.irrigation)}</div>` : ''}
-            ${!bl.size && !bl.crop && !bl.irrigation ? `<div style="color:#aaa">No details yet</div>` : ''}
-          </div>
-        </div>`).join('')}
-    </div>
   </div>`;
 }
 
@@ -815,61 +794,6 @@ function saveFarmInfo() {
   saveFarmData(currentFarm, d);
   navigate('farm-profile');
   showToast('Farm info saved!');
-}
-
-// ====================== BLOCKS ======================
-let pendingBlockPhoto = null;
-
-function openEditBlock(idx) {
-  const d = getFarmData(currentFarm);
-  const bl = (d.blocks||[])[idx] || {};
-  pendingBlockPhoto = bl.photo || null;
-  openModal('Edit ' + (bl.name || 'Block '+(idx+1)), `
-    <div class="form-row">
-      <div class="form-group"><label>Block Name</label><input id="bl-name" value="${esc(bl.name||'Block '+(idx+1))}" /></div>
-      <div class="form-group"><label>Size (m²)</label><input id="bl-size" value="${esc(bl.size||'')}" placeholder="e.g. 500" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Crop</label><input id="bl-crop" value="${esc(bl.crop||'')}" placeholder="e.g. Wheat" /></div>
-      <div class="form-group"><label>Irrigation System</label><input id="bl-irr" value="${esc(bl.irrigation||'')}" placeholder="e.g. Drip" /></div>
-    </div>
-    <div class="form-group"><label>📷 Block Photo</label>
-      <div class="task-photo-upload" onclick="document.getElementById('bl-photo-input').click()" style="padding:10px">
-        <input type="file" id="bl-photo-input" accept="image/*" onchange="onBlockPhotoSelected(event)" style="display:none" />
-        <div style="font-size:11px;color:var(--gray)">📷 ${bl.photo ? 'Photo uploaded — click to change' : 'Click to add photo'}</div>
-      </div>
-      <div id="bl-photo-prev">${pendingBlockPhoto ? `<img src="${pendingBlockPhoto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:6px" />` : ''}</div>
-    </div>
-  `, `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveBlock(${idx})">Save Block</button>`);
-}
-
-function onBlockPhotoSelected(event) {
-  const file = event.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    pendingBlockPhoto = e.target.result;
-    const prev = document.getElementById('bl-photo-prev');
-    if (prev) prev.innerHTML = `<img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:6px" />`;
-  };
-  reader.readAsDataURL(file);
-  event.target.value = '';
-}
-
-function saveBlock(idx) {
-  const d = getFarmData(currentFarm);
-  if (!d.blocks) d.blocks = Array.from({length:5},(_,i)=>({name:'Block '+(i+1),size:'',crop:'',irrigation:'',photo:''}));
-  d.blocks[idx] = {
-    name: document.getElementById('bl-name').value || 'Block '+(idx+1),
-    size: document.getElementById('bl-size').value,
-    crop: document.getElementById('bl-crop').value,
-    irrigation: document.getElementById('bl-irr').value,
-    photo: pendingBlockPhoto || '',
-  };
-  saveFarmData(currentFarm, d);
-  closeModal();
-  navigate('farm-profile');
-  showToast('Block saved!');
 }
 
 // ====================== LIGHTBOX ======================
@@ -2432,12 +2356,7 @@ function openAddPlantHealth(existingId) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Plant Type / Crop</label><input id="ph-plant" value="${esc(ex?.plantType||'')}" placeholder="e.g. Mango, Tomato" /></div>
-      <div class="form-group"><label>Block</label>
-        <select id="ph-loc">
-          <option value="">— Select Block —</option>
-          ${(getFarmData(currentFarm).blocks||[]).map((bl,i)=>`<option value="${esc(bl.name||'Block '+(i+1))}" ${ex?.location===(bl.name||'Block '+(i+1))?'selected':''}>${esc(bl.name||'Block '+(i+1))}</option>`).join('')}
-        </select>
-      </div>
+      <div class="form-group"><label>Location / Block</label><input id="ph-loc" value="${esc(ex?.location||'')}" placeholder="e.g. Block C" /></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Severity</label>
