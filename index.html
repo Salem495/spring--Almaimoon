@@ -61,10 +61,13 @@
   #weather-bar .w-unit { font-size: 11px; opacity: .75; }
   #weather-bar .w-label { font-size: 11px; opacity: .7; margin-left: 2px; }
   #weather-bar .w-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.2); }
-  #weather-bar .w-updated { font-size: 10px; opacity: .5; }
-  #weather-bar .w-condition { font-size: 12px; opacity: .8; font-style: italic; }
-  #weather-bar .w-loading { opacity: .6; font-size: 12px; }
-  #weather-bar .w-error { opacity: .7; font-size: 12px; color: #ffbba0; }
+  #weather-bar { flex-direction: column; align-items: stretch; padding: 6px 16px; gap: 0; }
+  #weather-current { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #weather-forecast { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .w-day { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 5px 12px; display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .w-day-label { opacity: 0.75; font-size: 11px; }
+  .w-day-temp { font-weight: 700; }
+  .w-day-range { opacity: 0.7; font-size: 11px; }
 
   /* heat index color coding */
   .heat-extreme { color: #ff4444 !important; }
@@ -322,9 +325,12 @@
 
 <!-- WEATHER BAR (always visible) -->
 <div id="weather-bar">
-  <span class="w-location">📍 Al Dhaid, Sharjah — UAE</span>
-  <div class="w-divider"></div>
-  <span class="w-loading" id="weather-content">⏳ Loading weather...</span>
+  <div id="weather-current">
+    <span class="w-location">📍 Al Dhaid, Sharjah — UAE</span>
+    <div class="w-divider"></div>
+    <span class="w-loading" id="weather-content">⏳ Loading weather...</span>
+  </div>
+  <div id="weather-forecast"></div>
 </div>
 
 <!-- LOGIN -->
@@ -2997,7 +3003,8 @@ function heatIndexClass(t) {
 async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
-    `&wind_speed_unit=kmh&timezone=Asia%2FDubai`;
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+    `&wind_speed_unit=kmh&timezone=Asia%2FDubai&forecast_days=4`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -3014,7 +3021,7 @@ async function fetchWeather() {
     const heatCls = heatIndexClass(temp);
 
     document.getElementById('weather-content').outerHTML = `
-      <div class="w-item">
+      <div class="w-item" id="weather-content">
         <span class="w-icon">${icon}</span>
         <span class="w-val ${heatCls}">${temp}°C</span>
         <span class="w-unit">/ Feels ${feels}°C</span>
@@ -3034,9 +3041,29 @@ async function fetchWeather() {
       <div class="w-divider"></div>
       <span class="w-condition">${cond}</span>
       <span class="w-updated">Updated ${now}</span>`;
+
+    // 3-day forecast (skip today = index 0, show next 3)
+    const days = data.daily;
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let forecastHtml = '';
+    for (let i = 1; i <= 3; i++) {
+      const date = new Date(days.time[i]);
+      const dayLabel = dayNames[date.getDay()];
+      const hi = Math.round(days.temperature_2m_max[i]);
+      const lo = Math.round(days.temperature_2m_min[i]);
+      const dIcon = WMO_ICONS[days.weather_code[i]] || '🌡️';
+      forecastHtml += `<div class="w-day">
+        <span class="w-day-label">${dayLabel}</span>
+        <span>${dIcon}</span>
+        <span class="w-day-temp">${hi}°</span>
+        <span class="w-day-range">/ ${lo}°</span>
+      </div>`;
+    }
+    document.getElementById('weather-forecast').innerHTML = forecastHtml;
+
   } catch(e) {
     const el = document.getElementById('weather-content');
-    if (el) el.outerHTML = `<span class="w-error">⚠️ Weather unavailable — check connection</span>`;
+    if (el) el.outerHTML = `<span class="w-error" id="weather-content">⚠️ Weather unavailable — check connection</span>`;
   }
 }
 
