@@ -545,6 +545,7 @@ const NAV_ADMIN = [
   { id: 'store',        label: '📦 Store' },
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
   { id: 'team',         label: '👥 Team' },
 ];
 const NAV_ENG = [
@@ -556,6 +557,7 @@ const NAV_ENG = [
   { id: 'visits',       label: '🚜 Visits' },
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 const NAV_SOIL = [
   { id: 'dashboard',    label: '📊 Dashboard' },
@@ -567,6 +569,7 @@ const NAV_SOIL = [
   { id: 'visits',       label: '🚜 Visits' },
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 const NAV_AGRO = [
   { id: 'dashboard',    label: '📊 Dashboard' },
@@ -578,6 +581,7 @@ const NAV_AGRO = [
   { id: 'visits',       label: '🚜 Visits' },
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 const NAV_IRR = [
   { id: 'dashboard',    label: '📊 Dashboard' },
@@ -591,16 +595,19 @@ const NAV_IRR = [
   { id: 'visits',       label: '🚜 Visits' },
   { id: 'issues',       label: '⚠️ Issues' },
   { id: 'notes',        label: '📝 Notes' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 const NAV_MOIS = [
   { id: 'dashboard',    label: '📊 Dashboard' },
   { id: 'farm-costs',   label: '⚡ Electricity & Water' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 const NAV_CHETAK = [
   { id: 'dashboard',    label: '📊 Dashboard' },
   { id: 'farm-costs',   label: '💰 All Costs' },
   { id: 'my-tasks',     label: '✅ My Tasks' },
+  { id: 'crop-guide',   label: '🌱 Crop Guide' },
 ];
 
 function initApp() {
@@ -654,6 +661,7 @@ function navigate(page) {
   else if (page === 'irr-jobs')     main.innerHTML = renderIrrJobs();
   else if (page === 'store')        main.innerHTML = renderStore();
   else if (page === 'farm-costs')   main.innerHTML = renderFarmCosts();
+  else if (page === 'crop-guide')   main.innerHTML = renderCropGuide();
 }
 
 // ====================== FARM PROFILE (PHOTOS) ======================
@@ -3070,6 +3078,114 @@ async function fetchWeather() {
 // fetch immediately, then refresh every 10 minutes
 fetchWeather();
 setInterval(fetchWeather, 10 * 60 * 1000);
+
+// ====================== CROP GUIDE ======================
+const CROP_GUIDE = [
+  {
+    name: 'Date Palm', icon: '🌴', color: '#c07c2a',
+    planting: 'Feb – Apr (offshoots/suckers transplanted in spring)',
+    manure: 'Jan–Feb: organic compost before flowering\nJun: potassium-rich fertilizer for fruit development\nOct: phosphorus after harvest',
+    watering: 'Summer (Jun–Sep): every 2–3 days\nWinter (Nov–Feb): every 7–10 days\nFlowering (Mar–May): every 4–5 days',
+    notes: 'Needs full sun. Tolerates drought once established. Avoid waterlogging.'
+  },
+  {
+    name: 'Mango', icon: '🥭', color: '#e07b39',
+    planting: 'Mar – May (after last cool spell)',
+    manure: 'Oct–Nov: NPK before dormancy\nFeb: nitrogen boost before flowering\nJun: potassium during fruit development',
+    watering: 'Young trees: every 2–3 days\nMature trees: every 5–7 days\nReduce watering Nov–Jan to encourage flowering',
+    notes: 'Prune after harvest. Avoid frost. Best varieties for UAE: Keitt, Tommy Atkins, Sindri.'
+  },
+  {
+    name: 'Citrus (Lemon/Orange)', icon: '🍋', color: '#f4a261',
+    planting: 'Sep – Nov (cooler season planting)',
+    manure: 'Feb: nitrogen for spring growth\nMay: balanced NPK\nAug: potassium before fruit ripening',
+    watering: 'Every 3–4 days in summer\nEvery 7–10 days in winter\nDeep watering preferred over frequent shallow watering',
+    notes: 'Sensitive to salinity. Use drip irrigation. Mulch around base to retain moisture.'
+  },
+  {
+    name: 'Pomegranate', icon: '🍎', color: '#8b2252',
+    planting: 'Feb – Mar (late winter / early spring)',
+    manure: 'Jan: organic compost\nMar: nitrogen for flowering\nJul: potassium for fruit set',
+    watering: 'Every 5–7 days in summer\nEvery 10–14 days in winter\nDrought-tolerant once established',
+    notes: 'Thrives in UAE climate. Prune suckers regularly. Harvest Aug–Oct.'
+  },
+  {
+    name: 'Guava', icon: '🍈', color: '#2d6a4f',
+    planting: 'Mar – Apr or Sep – Oct',
+    manure: 'Feb: nitrogen before new growth\nJun: balanced NPK\nSep: organic compost after harvest',
+    watering: 'Every 3–5 days in summer\nEvery 7–10 days in winter\nVery sensitive to waterlogging',
+    notes: 'Fast-growing. Two crops per year possible. Protect from strong winds.'
+  },
+  {
+    name: 'Tomato', icon: '🍅', color: '#e74c3c',
+    planting: 'Sep – Nov (cool season crop in UAE)',
+    manure: 'At planting: compost + phosphorus\n3 weeks after: nitrogen\nAt flowering: potassium + calcium',
+    watering: 'Every 2–3 days\nKeep consistent — irregular watering causes blossom end rot',
+    notes: 'Grows Oct–Mar in UAE. Use shade net in warm spells. Stake plants.'
+  },
+  {
+    name: 'Cucumber', icon: '🥒', color: '#40916c',
+    planting: 'Sep – Oct or Feb – Mar',
+    manure: 'Before planting: organic compost\n2 weeks after germination: nitrogen\nAt fruiting: potassium',
+    watering: 'Daily or every 2 days — needs consistent moisture\nDrip irrigation ideal',
+    notes: 'Fast crop (45–60 days to harvest). Use trellis for better air circulation.'
+  },
+  {
+    name: 'Wheat', icon: '🌾', color: '#4a7c59',
+    planting: 'Nov – Dec (winter crop)',
+    manure: 'At sowing: phosphorus + nitrogen\n3 weeks after germination: top-dress nitrogen\nAt tillering: potassium',
+    watering: 'Every 7–10 days\nCritical stages: germination, tillering, grain fill',
+    notes: 'Harvested Mar–Apr. Avoid excess water after grain formation.'
+  },
+  {
+    name: 'Watermelon', icon: '🍉', color: '#1d3557',
+    planting: 'Feb – Mar',
+    manure: 'Before planting: rich organic compost\nAt vine development: nitrogen\nAt fruit set: potassium',
+    watering: 'Every 3–4 days\nReduce watering 1–2 weeks before harvest for sweeter fruit',
+    notes: 'Needs large space. Harvest 80–90 days after planting. Mulch to retain moisture.'
+  },
+  {
+    name: 'Alfalfa', icon: '🌿', color: '#457b9d',
+    planting: 'Sep – Nov or Feb – Mar',
+    manure: 'At planting: phosphorus (fixes own nitrogen)\nEvery 6 months: potassium + micronutrients',
+    watering: 'Every 5–7 days in summer\nEvery 10–14 days in winter\nDeep irrigation to 60cm+',
+    notes: 'Perennial — cut every 25–30 days. 8–10 cuts per year. Salt-sensitive.'
+  },
+];
+
+function renderCropGuide() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const currentMonth = months[new Date().getMonth()];
+  return `
+  <div class="card" style="margin-bottom:16px">
+    <h2>🌱 Crop Guide — Planting, Fertilizing & Watering</h2>
+    <p style="color:var(--gray);font-size:13px;margin-top:4px">Reference guide for UAE / Gulf climate farms. Current month: <strong>${currentMonth}</strong></p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px">
+    ${CROP_GUIDE.map(crop => `
+      <div style="background:#fff;border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border-top:4px solid ${crop.color}">
+        <div style="background:${crop.color};color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:28px">${crop.icon}</span>
+          <strong style="font-size:16px">${crop.name}</strong>
+        </div>
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+          <div style="background:#f0faf4;border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:${crop.color};margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">🌱 Best Time to Plant / Seed</div>
+            <div style="font-size:13px;color:#333">${crop.planting}</div>
+          </div>
+          <div style="background:#fdf8f0;border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:#c07c2a;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">🌿 Fertilizing / Manure Schedule</div>
+            <div style="font-size:13px;color:#333;white-space:pre-line">${crop.manure}</div>
+          </div>
+          <div style="background:#f0f6ff;border-radius:8px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:#457b9d;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">💧 Watering per Tree / Plant</div>
+            <div style="font-size:13px;color:#333;white-space:pre-line">${crop.watering}</div>
+          </div>
+          <div style="font-size:12px;color:var(--gray);font-style:italic;padding:0 2px">💡 ${crop.notes}</div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
 
 // ====================== MODAL ======================
 function openModal(title, body, footer) {
