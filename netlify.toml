@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/car-registration"
+  to = "/car-registration/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/car-registration/"
+  to = "/car-registration/index.html"
+  status = 200
