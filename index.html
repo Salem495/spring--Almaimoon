@@ -3012,7 +3012,7 @@ async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
-    `&wind_speed_unit=kmh&timezone=Asia%2FDubai&forecast_days=4`;
+    `&wind_speed_unit=kmh&timezone=Asia%2FDubai&forecast_days=8`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -3054,7 +3054,7 @@ async function fetchWeather() {
     const days = data.daily;
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     let forecastHtml = '';
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 7; i++) {
       const date = new Date(days.time[i]);
       const dayLabel = dayNames[date.getDay()];
       const hi = Math.round(days.temperature_2m_max[i]);
