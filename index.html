@@ -3054,7 +3054,7 @@ async function fetchWeather() {
     const days = data.daily;
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     let forecastHtml = '';
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 6; i++) {
       const date = new Date(days.time[i]);
       const dayLabel = dayNames[date.getDay()];
       const hi = Math.round(days.temperature_2m_max[i]);
